@@ -1,6 +1,6 @@
 /* Stranded, by Aichinger Tobias, Ilming Winnie, Schludermann Julian. */
 
-:- dynamic i_am_at/1, at/2, holding/1.
+:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0.
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
 
 /* Starting zone */
@@ -25,7 +25,12 @@ path(waterfall, e, cave).
 
 /* Locations of items */
 
-at(thing, someplace).
+at(pager, beach).
+at(wood, forest).
+at(saw, cave).
+at(nails, waterfall).
+at(hammer, waterfall).
+at(cloth, cave).
 
 /* Locations of objects */
 
@@ -50,8 +55,35 @@ take(_) :-
         write('I don''t see it here.'),
         nl.
 
+/* Helpers for shipwreck Interaction */
+repair_items([wood, saw, hammer, nails]).
+
+has_items([Head|Tail]) :-
+        not(holding(Head)), write('You are missing: '), write(Head), nl, has_items(Tail), fail, !.
+has_items([Head|Tail]) :-
+        holding(Head), has_items(Tail).
+has_items([]).
+
+delete_items([Head|Tail]) :-
+        holding(Head), retract(holding(Head)), delete_items(Tail).
+delete_items([]).
+
+delete_wreck_items :-
+        repair_items(Items), delete_items(Items).
+
+can_repair_wreck() :-
+        repair_items(Items), has_items(Items).
+
 /* Interact with objects */
-interact(Object) :- write('TODO').
+interact(shipwreck) :-
+        not(is_ship_complete),
+        can_repair_wreck,
+        write('You successfully fixed the SHIPWRECK. You can now use the SHIP.'),
+        assert(is_ship_complete),
+        delete_wreck_items,!.
+interact(shipwreck) :-
+        is_ship_complete,
+        write('You already completed the ship. Venture out to escape'),!.
 
 
 /* These rules define the direction letters as calls to go/1. */
@@ -188,7 +220,7 @@ describe(lonely_stone) :-
         write('A lonely stone.'), nl,
         write('It seems to be the only stone on this beach.'), nl,
         write('For some reason it looks kind of sad and abandoned.'), nl,
-        write('You probably don''t want to stare at it for too long...'), nl. # TODO: Stare command?
+        write('You probably don''t want to stare at it for too long...'), nl. /* TODO: Stare command?*/
 
 /* Reasons why the path in a specific direction is denied */
 
