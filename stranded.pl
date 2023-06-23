@@ -78,6 +78,7 @@ can_repair_wreck() :-
 
 /* Interact with objects */
 interact(shipwreck) :-
+        i_am_at(beach),
         not(is_ship_complete),
         can_repair_wreck,
         write('You successfully fixed the SHIPWRECK. You can now use the SHIP.'),
