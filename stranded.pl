@@ -41,7 +41,7 @@ objects([tree], forest).
 
 take(X) :-
         holding(X),
-        write('You''re already holding it!'),
+        write('You\'re already holding it!'),
         !, nl.
 
 take(X) :-
@@ -53,7 +53,7 @@ take(X) :-
         !, nl.
 
 take(_) :-
-        write('I don''t see it here.'),
+        write('I don\'t see it here.'),
         nl.
 
 
@@ -89,11 +89,11 @@ interact(shipwreck) :-
         write('You already completed the ship. Venture out to escape'),!.
 
 interact(tree) :-
+        i_am_at(forest),
         not(is_ship_complete),
         not(at(wood, forest)),
         not(holding(wood)),
         holding(axe),
-        i_am_at(forest),
         assert(at(wood, forest)), 
         write('You chopped down the tree, now there is wood laying around.'), nl, !.
 interact(tree) :-
