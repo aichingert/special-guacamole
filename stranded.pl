@@ -26,15 +26,16 @@ path(waterfall, e, cave).
 /* Locations of items */
 
 at(pager, beach).
-at(wood, forest).
 at(saw, cave).
 at(nails, waterfall).
 at(hammer, waterfall).
 at(cloth, cave).
+/* at(axe, cave). */
 
 /* Locations of objects */
 
 objects([shipwreck, lonely_stone], beach).
+objects([tree], forest).
 
 /* Pick up items. */
 
@@ -54,6 +55,7 @@ take(X) :-
 take(_) :-
         write('I don''t see it here.'),
         nl.
+
 
 /* Helpers for shipwreck Interaction */
 repair_items([wood, saw, hammer, nails]).
@@ -85,6 +87,31 @@ interact(shipwreck) :-
         is_ship_complete,
         write('You already completed the ship. Venture out to escape'),!.
 
+interact(tree) :-
+        not(is_ship_complete),
+        not(at(wood, forest)),
+        not(holding(wood)),
+        holding(axe),
+        i_am_at(forest),
+        assert(at(wood, forest)), 
+        write('You chopped down the tree, now there is wood laying around.'), nl, !.
+interact(tree) :-
+        not(i_am_at(forest)),
+        write('You are not in the forest.'), nl, !.
+interact(tree) :-
+        is_ship_complete,
+        write('The ship is already completed.'), nl, !.
+interact(tree) :-
+        at(wood, forest),
+        write('There is already wood laying around.'), nl, !.
+interact(tree) :-
+        holding(wood),
+        write('You already have wood. Are you really that greedy?'), nl, !.
+interact(tree) :-
+        not(holding(axe)),
+        write('You are trying to cut a tree with your hands?'), nl,
+        write('Is everything alright inside your head?'), nl,
+        write('Maybe use that head of yours to find an axe.'), nl, !.      
 
 /* These rules define the direction letters as calls to go/1. */
 
@@ -211,6 +238,10 @@ describe(beach) :- write('You are at the beach. The only significant thing'), nl
                 write('to your east'), nl,
                 nl.
 
+describe(forest) :- 
+        write('You are at the forest. You hear water splashing in the near distance.'), nl,
+        write('Because of the trees you can''t see more.'), nl.
+
 /* Descriptions of objects */
 describe(shipwreck) :-
         write('A shipwreck.'), nl, write('If you had some wood, some nails, a hammer,'), nl,
@@ -221,6 +252,10 @@ describe(lonely_stone) :-
         write('It seems to be the only stone on this beach.'), nl,
         write('For some reason it looks kind of sad and abandoned.'), nl,
         write('You probably don''t want to stare at it for too long...'), nl. /* TODO: Stare command?*/
+
+describe(tree) :-
+        write('A tree.'), nl,
+        write('Here are only trees, all you can see are trees.'), nl.
 
 /* Reasons why the path in a specific direction is denied */
 
