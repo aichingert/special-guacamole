@@ -54,11 +54,12 @@ take(X) :-
 
 take(_) :-
         write('I don\'t see it here.'),
-        nl.
+        nl,
+        false.
 
 
 /* Helpers for shipwreck Interaction */
-repair_items([wood, saw, hammer, nails]).
+repair_items([wood, saw, hammer, nails, cloth]).
 
 has_items([Head|Tail]) :-
         not(holding(Head)), write('You are missing: '), write(Head), nl, has_items(Tail), fail, !.
@@ -74,7 +75,13 @@ delete_wreck_items :-
         repair_items(Items), delete_items(Items).
 
 can_repair_wreck() :-
-        repair_items(Items), has_items(Items).
+        repair_items(Items), (
+                not(has_items(Items)),
+                write('To successfully repair the wreck, gather those materials first!'),
+                nl, !, fail
+                ;
+                write('Congratulations you gatherered all needed resources!'),
+                nl, !).
 
 /* Interact with objects */
 interact(shipwreck) :-
@@ -87,6 +94,7 @@ interact(shipwreck) :-
 interact(shipwreck) :-
         is_ship_complete,
         write('You already completed the ship. Venture out to escape'),!.
+
 
 interact(tree) :-
         i_am_at(forest),
@@ -113,6 +121,15 @@ interact(tree) :-
         write('You are trying to cut a tree with your hands?'), nl,
         write('Is everything alright inside your head?'), nl,
         write('Maybe use that head of yours to find an axe.'), nl, !.      
+
+
+interact(_) :-
+        write('I don\'t see that here.'),
+        i_am_at(Place),
+        at(_,Place),
+        write('But there seems to be an item around here...'), nl,
+        write('Maybe you meant take(Item) instead?'), nl,
+        false.
 
 /* These rules define the direction letters as calls to go/1. */
 
@@ -176,6 +193,22 @@ describe_objects([Head|Tail]) :-
 
 describe_objects([]).
 
+/* Print items currently held */
+items :-
+        write('You are currently holding: '),
+        nl,
+        not(holding(_)),
+        write('Nothing...'),
+        nl, !
+        ;
+        not(print_items), !.
+
+print_items :-
+        holding(X),
+        write('- '),
+        write(X),
+        nl,
+        fail.
 /* This rule tells how to die. */
 
 die :-
@@ -206,6 +239,7 @@ instructions :-
         write('interact(Object).  -- to interact with an object'), nl,
         write('look.              -- to look around you again.'), nl,
         write('instructions.      -- to see this message again.'), nl,
+        write('items.             -- to see all items you are carrying'), nl,
         write('halt.              -- to end the game and quit.'), nl,
         nl.
 
