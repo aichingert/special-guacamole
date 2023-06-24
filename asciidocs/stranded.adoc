@@ -1,0 +1,34 @@
+= Stranded
+Aichinger Tobias, Ilming Winnie, Schludermann Julian
+1.0.0, 2023-06-23: Brief Overview
+:toc: preamble
+:toclevels: 5
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:sectnumlevels: 5
+:icons: font
+:experimental: // for displaying the keyboard-icons
+ifndef::imagesdir[:imagesdir: images]
+:linkattrs:   // so window="_blank" will be executed
+
+== Team
+Aichinger Tobias, Ilming Winnie, Schludermann Julian
+
+== Backstory
+It felt like just seconds ago, when you were on a cruise with your colleges enjoying the nice weather and partying all day long. Now you're left with nothing. Well nothing except your dirty, wet and ripped clothes on your body. You have no idea where you came from nor where exactly you are now. You look around you and see some water, well actually lots of water. You seem to have stranded on an island of some sorts. Your head still hurts a bit, and you are a bit disoriented, but one thing is for sure. You can't stay here forever, and you need to find a way out of here...
+
+== Map and Mechanics
+image::../images/map.png[alt=Map, width=400, float="left"]
+.About the map
+The map consists of four big zones: The beach, the forest, the cave and the waterfall. They might look boring at first but each zone contains some objects, items, tasks or puzzles you can interact with, pick up, complete or solve respectively.
+
+.Mechanics
+Some basic game mechanics include: Visit neighbouring zones by specifying a cardinal direction. Picking up items. Interacting with objects, entering sub-zones, listing all items in your inventory. In addition, sometimes you can use some additional commands when visiting special locations or doing certain tasks. (e.g. solving a puzzle)
+
+
+== Tips
+This game is *hard* when played without any hints at all. And it's meant to be. A Puzzle can be very random at times and require a lot of out of the box thinking to be solved. The most important thing is to *never give up*. *You can do it*. Taking breaks is beneficial for some of us when we are stuck.
+
+
+Now Venture out and explore the island! We wish you the best of luck and lots of fun. (:
+
+
