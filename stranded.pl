@@ -120,6 +120,26 @@ interact(tree) :-
         write('Is everything alright inside your head?'), nl,
         write('Maybe use that head of yours to find an axe.'), nl, !.      
 
+interact(cave_entrance) :-
+        i_am_at(cave),
+        cave_gate_part_one, !.
+interact(cave_entrance) :-
+        not(i_am_at(cave)),
+        write('I don\'t see a cave? Do you? Travel a bit more to explore the area.'), nl, !.
+interact(cave_entrance) :-
+        not(cave_gate_part_one),
+        write('There is a huge stone gate infront of you. On the right site'), nl,
+        write('you notice a few small marbles integrated in the wall with numbers'), nl,
+        write('on them. You are able interact with the marbles.'), nl, !.
+interact(marbles) :-
+        not(cave_gate_part_one),
+        write('These marbles are not in ascending order but they are in a circular formation.'), nl,
+        write('So if you move one of them to the right the element at the bottom is going to'), nl,
+        write('appear at the front again'), nl,
+        write('Try to get them in the right order.'), nl, nl,
+        write('You have the following options to interact with them: '), nl,
+        write('roll.                --which moves the circle once'),
+        write('inspect_marbles.     --shows you the order of the marbles'), nl, !.
 
 interact(_) :-
         write('I don\'t see that here.'),
@@ -128,6 +148,34 @@ interact(_) :-
         write('But there seems to be an item around here...'), nl,
         write('Maybe you meant take(Item) instead?'), nl,
         false.
+
+/* === Cave zone === */
+
+numbers([4,6,1,3,5,2,7,8,9]).
+
+inspect_marbles :- numbers(L), print_marbles(L), nl.
+
+print_marbles([]) :- true, !.
+print_marbles([Head]) :- write(Head), !.
+print_marbles([Head | Tail]) :-
+        write(Head), write(', '), print_marbles(Tail), !.
+
+roll :-
+        numbers(L),
+        remove_last(L, Last),
+        prepend(Last, [], L).
+
+remove_last([Last], Last).
+remove_last([_ | Tail], Last) :- remove_last(Tail, Last), !.
+
+prepend(Elem, List, [Elem | List]).
+
+is_in_asc_order(_, []) :- true, !.
+is_in_asc_order(Start, [Head]) :- Start < Head, !.
+is_in_asc_order(Start, [Head|Tail]) :-
+        Start < Head , is_in_asc_order(Head, Tail), !.
+
+cave_gate_part_one :- numbers([Head|Tail]), is_in_asc_order(Head, Tail).
 
 /* These rules define the direction letters as calls to go/1. */
 
