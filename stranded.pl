@@ -21,6 +21,8 @@ path(beach, s, ocean) :-
 
 path(forest, n, waterfall).
 path(forest, e, cave).
+path(forest, s, beach).
+
 path(waterfall, e, cave).
 
 /* Locations of items */
@@ -164,8 +166,8 @@ look :-
         describe(Place),
         nl,
         notice_items_at(Place),
-        notice_objects_at(Place),
-        nl.
+        nl,
+        notice_objects_at(Place).
 
 
 /* These rules set up a loop to mention all the objects
@@ -296,3 +298,7 @@ describe(tree) :-
 
 deny(beach, e) :- write('You probably shouldn''t explore the beach right now.'), nl.
 deny(beach, w) :- deny(beach, e).
+deny(forest, w) :-
+                write('You start wandering west. Suddenly you hear a strange noise.'), nl,
+                write('This sound does not seem very friendly. The last thing you would want right now'), nl,
+                write('is to encounter something hostile... So you turn around and go back to where you came from.'), nl.
