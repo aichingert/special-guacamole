@@ -1,8 +1,9 @@
 /* Stranded, by Aichinger Tobias, Ilming Winnie, Schludermann Julian. */
 
-:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1.
+:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1, translation_func/4, key/1.
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
 
+/* */
 /* === Starting zone === */
 
 i_am_at(beach).
@@ -26,14 +27,23 @@ path(cave, enter, cave_entrance) :-
         write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
         write('You remember that you collected a torch.'), nl,
         write('You light the torch and start to see the entrance of the cave.'), nl.
-path(cave_entrance, enter, cave_gate) :-
+path(cave_entrance, enter, inner_cave_gate) :-
         cave_gate_part_one,
-        write('The stone gate moves a little bit but not enough for you to pass through.'), nl,
-        write('As you are stepping closer you see a few scratches in the wall.'), nl,
+        write('The stone gate opens, as you walk inside and get deeper you see another gate.'), nl,
+        write('While getting closer you see a few scratches on the wall and a sheet of papyrus on the floor.'), nl,
         write('Trying to see it better you bring the torch closer and you realise'), nl,
-        write('that this is the language of an old civilization. You need to decipher the message!'), nl, 
-        write('What you currently see is:'), nl,
-        write(''). /* TODO: come up with mysterious message */
+        write('that this is the language of an old civilization and on the papyrus is the translation for it.'), nl,
+        write('You need to decipher the message to get the secret key!'), nl, 
+        write('To accomplish this write your own prolog rule and use the provided utilities to check if it is right.'), nl,
+        write('Your rule should have the following fields => AncientAlphabet(List), Translation(List), Input(List), Output(List)'), nl,
+        write('Where AncientAlphabet maps to Translation. Utils are listed below: '), nl,
+        write('set_translation_func(Name).        --sets your rule, expects your rules name as parameter'), nl,
+        write('test_translation.                  --which tests your rule'), nl,
+        write('get_ancient_alphabet(Alphabet)     --puts the ancient alphabet in Alphabet'), nl,
+        write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, !.
+path(inner_cave_gate, enter, chamber) :-
+        cave_gate_part_two,
+        write('You finally enter the deepest part of the cave.'), nl, !.
 
 path(forest, n, waterfall).
 path(forest, e, cave).
@@ -42,20 +52,21 @@ path(waterfall, s, forest).
 path(cave, w, forest).
 path(waterfall_room, back, waterfall).
 path(cave_entrance, back, cave).
+path(inner_cave_gate, back, cave_entrance).
 
 path(waterfall, e, cave).
 
 /* Locations of items */
 
 at(pager, beach).
-/* at(torch, waterfall_room).*/
-/* at(axe, cave). */
+at(axe, inner_cave_gate).
 
 /* Locations of objects */
 
 objects([shipwreck, lonely_stone], beach).
 objects([tree], forest).
 objects([marbles], cave_entrance).
+objects([axe], inner_cave_gate).
 objects([crate], waterfall_room).
 
 /* Pick up items. */
@@ -120,7 +131,6 @@ interact(shipwreck) :-
         is_ship_complete,
         write('You already completed the ship. Venture out to escape'),!.
 
-
 interact(tree) :-
         i_am_at(forest),
         not(is_ship_complete),
@@ -168,13 +178,18 @@ interact(crate) :-
         write('What exactly are you trying to do?'), nl, !.
 
 interact(gate) :-
-        not(i_am_at(cave_entrance)),
+        not(i_am_at(inner_cave_gate)),
         write('Are your delusions getting out of hand? There is no gate at the '), i_am_at(Loc), write(Loc), nl,
         write('Maybe rest for a bit so you can focus again.'), nl, !.
 interact(gate) :-
-        cave_gate_part_one,
+        not(cave_gate_part_one),
+        write('How do you know about this? Put the marbles in the right order first!'), !.
+interact(gate) :-
+        not(translation_func(_)),
+        write('Write your own prolog rule first and set it with set_translation_func.'), !.
+interact(gate) :-
+        cave_gate_part_one.
         
-
 interact(_) :-
         write('I don\'t see that here.'), nl,
         i_am_at(Place),
@@ -192,7 +207,7 @@ wrong_place(Loc, Action) :-
         write('? You are currently at the '), write(Loc),
         write(' and there is nothing to '), write(Action), nl, !.
 
-inspect_marbles :- not(i_am_at(cave)), i_am_at(Loc), wrong_place(Loc, 'inspect'), !.
+inspect_marbles :- not(i_am_at(cave_entrance)), i_am_at(Loc), wrong_place(Loc, 'inspect'), !.
 inspect_marbles :-
         cave_gate_part_one,
         write('You already solved the puzzle, you don\'t have to inspect the marbles anymore.'), nl, !.
@@ -237,9 +252,27 @@ is_in_asc_order(Start, [Head]) :- Start < Head, !.
 is_in_asc_order(Start, [Head|Tail]) :-
         Start < Head , is_in_asc_order(Head, Tail), !.
 
-cave_gate_part_one :- numbers([Head|Tail]), is_in_asc_order(Head, Tail).
+cave_gate_part_one :- marble_labels([Head|Tail]), is_in_asc_order(Head, Tail).
 
-/* Cave puzzle 2: Write your own prolog function */
+/* Cave puzzle 2: Write your own prolog function
+ *
+ * Message: The key is the best school subject -> LOAL
+*/
+
+key([]).
+pass_key(Key) :- assert(key(Key)).
+
+input(['ፚ', 'ᶋ឵', 'ⵇ', ' ', 'Ψ', 'ⵇ', 'Հ', ' ', 'Æ', 'ꝟ', ' ', 'ፚ', 'ᶋ឵', 'ⵇ', ' ', '∆', 'ⵇ', 'ꝟ', 'ፚ', ' ', 'ꝟ', 'ш', '∆', '∰ަ', 'ⵇ', '⅁', 'ፚ']).
+
+get_ancient_alphabet(Alphabet) :- 
+        Alphabet    = ['⍼', '∆', '⅁', 'ᙝ', 'ⵇ', '▙', '☭', 'ᶋ឵', 'Æ', '∰ަ', 'Ψ', 'ᗅ', '⏻'','⌬', 'Ø', '⌘', '♗', '๑', 'ꝟ', 'ፚ', 'ш', 'Ξ', 'ᘜ', '⊙', 'Հ', '℻'', ' '].
+get_translation(Translation) :-
+        Translation = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '].
+
+cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
+
+is_correct_key([]) :- false.
+is_correct_key([Head | Tail]) :- are_arrays_equal(Head, ['L','O','A','L']) ; is_correct_key(Tail), !.
 
 % This function loads a given function with 4 Parameters into our dynamic "translation_func"
 % It's complicated and simple at the same time, so I will make some comments to explain what happens here
@@ -541,6 +574,8 @@ describe(cave) :-
 describe(cave_entrance) :-
         write('There is a huge stone gate infront of you. On the right site you'), nl,
         write('notice a few small marbles integrated in the wall with numbers on them.'), nl, !.
+describe(inner_cave_gate) :-
+        write('You walk even deeper in the cave and see a new gate with a new problem in the distance'), nl, !.
 
 /* Descriptions of objects */
 describe(shipwreck) :-
@@ -556,6 +591,9 @@ describe(lonely_stone) :-
 describe(tree) :-
         write('A tree.'), nl,
         write('Here are only trees, all you can see are trees.'), nl.
+
+describe(axe) :-
+        write('An axe can be used to cut trees.'), nl.
 
 describe(marbles) :-
         write('These marbles are in a random order but they are in a circular formation.'), nl,
