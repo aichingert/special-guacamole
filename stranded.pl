@@ -175,7 +175,8 @@ enter(cave) :-
         write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
         write('You remember that you collected a torch.'), nl,
         write('You light the torch and start to see the interour of the cave.'), nl, !.
-enter(_),
+
+enter(_) :-
         write('You are currently not able to enter anything'), nl.
 
 /* Look around you */
@@ -187,7 +188,6 @@ look :-
         notice_items_at(Place),
         nl,
         notice_objects_at(Place).
-
 
 /* These rules set up a loop to mention all the objects
    in your vicinity. */
