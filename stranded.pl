@@ -17,7 +17,7 @@ path(beach, s, ocean) :- is_ship_complete, write('TODO: ending'), nl, finish.
 path(beach, s, ocean) :-
                         write('Are you out of your mind? '), nl,
                         write('Trying to cross the ocean without a ship seems like a'), nl,
-                        write('suicide mission. You''re lucky you survived!'), nl, !, fail.
+                        write('suicide mission. You\'re lucky you survived!'), nl, !, fail.
 
 path(forest, n, waterfall).
 path(forest, e, cave).
@@ -28,10 +28,6 @@ path(waterfall, e, cave).
 /* Locations of items */
 
 at(pager, beach).
-at(saw, cave).
-at(nails, waterfall).
-at(hammer, waterfall).
-at(cloth, cave).
 /* at(axe, cave). */
 
 /* Locations of objects */
@@ -156,8 +152,31 @@ go(Direction) :-
         i_am_at(Loc),
         deny(Loc,Direction), !.
 go(_) :-
-        write('You can''t go that way!').
+        write('You can\'t go that way!'), nl.
 
+/* Step into site */
+
+enter(waterfall) :-
+        i_am_at(waterfall),
+        retract(i_am_at(waterfall)),
+        assert(i_am_at(waterfall_room)),
+        write('You found a secret chamber behind the waterfall. Congratulations!'), nl,  !.
+
+enter(cave) :-
+        i_am_at(cave),
+        not(holding(torch)),
+        write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
+        write('You are starting to get scared as you hear strange noises. You run out of the cave.'), nl, !.
+enter(cave) :-
+        i_am_at(cave),
+        holding(torch),
+        retract(i_am_at(cave)),
+        assert(i_am_at(cave_interiour)),
+        write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
+        write('You remember that you collected a torch.'), nl,
+        write('You light the torch and start to see the interour of the cave.'), nl, !.
+enter(_),
+        write('You are currently not able to enter anything'), nl.
 
 /* Look around you */
 
@@ -235,10 +254,11 @@ instructions :-
         write('Enter commands using standard Prolog syntax.'), nl,
         write('Available commands are:'), nl,
         write('start.             -- to start the game.'), nl,
-        write('story.             -- to listen to game''s backstory.'), nl,
+        write('story.             -- to listen to game\'s backstory.'), nl,
         write('n.  s.  e.  w.     -- to go in that direction.'), nl,
         write('take(Item).        -- to pick up an item.'), nl,
         write('interact(Object).  -- to interact with an object'), nl,
+        write('enter(Location).   -- to step into a site.'), nl,
         write('look.              -- to look around you again.'), nl,
         write('instructions.      -- to see this message again.'), nl,
         write('items.             -- to see all items you are carrying'), nl,
@@ -258,12 +278,12 @@ start :-
 story :-
         nl,
         write('It felt like just seconds ago, when you were on a cruise'), nl,
-        write('with your colleges enjoing the nice weather. Now you''re left'), nl,
+        write('with your colleges enjoing the nice weather. Now you\'re left'), nl,
         write('with nothing except your dirty, wet and ripped clothes.'), nl,
         write('You have no idea where you came from nor where exactly you are now.'), nl,
         write('Around you is just water, lots of water. You seem to have stranded'), nl,
         write('on an island of some sorts.'), nl,
-        write('But one thing is for sure. You can''t stay here forever...'), nl,
+        write('But one thing is for sure. You can\'t stay here forever...'), nl,
         nl.
 
 
@@ -277,7 +297,18 @@ describe(beach) :- write('You are at the beach. The only significant thing'), nl
 
 describe(forest) :- 
         write('You are at the forest. You hear water splashing in the near distance.'), nl,
-        write('Because of the trees you can''t see more.'), nl.
+        write('Because of the trees you can\'t see more.'), nl.
+
+describe(waterfall) :-
+        write('A waterfall you can drink the fresh water directly from it.'), nl,
+        write('Maybe you should explore some more before you continue your journey.'), nl.
+describe(waterfall_room) :-
+        write('You are behind the waterfall altough it is not very brigth, it is bright enough for you to see.'), nl.
+
+describe(cave) :-
+        write('A mysterious dark cave. If you want to enter it grab some light source.'), nl.
+describe(cave_interiour) :-
+        write('The interiour of the cave is cramped you can not see anything interesting from here.'), nl.
 
 /* Descriptions of objects */
 describe(shipwreck) :-
@@ -288,7 +319,7 @@ describe(lonely_stone) :-
         write('A lonely stone.'), nl,
         write('It seems to be the only stone on this beach.'), nl,
         write('For some reason it looks kind of sad and abandoned.'), nl,
-        write('You probably don''t want to stare at it for too long...'), nl. /* TODO: Stare command?*/
+        write('You probably don\'t want to stare at it for too long...'), nl. /* TODO: Stare command?*/
 
 describe(tree) :-
         write('A tree.'), nl,
@@ -296,7 +327,7 @@ describe(tree) :-
 
 /* Reasons why the path in a specific direction is denied */
 
-deny(beach, e) :- write('You probably shouldn''t explore the beach right now.'), nl.
+deny(beach, e) :- write('You probably shouldn\'t explore the beach right now.'), nl.
 deny(beach, w) :- deny(beach, e).
 deny(forest, w) :-
                 write('You start wandering west. Suddenly you hear a strange noise.'), nl,
