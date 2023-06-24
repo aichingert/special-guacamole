@@ -239,6 +239,39 @@ is_in_asc_order(Start, [Head|Tail]) :-
 
 cave_gate_part_one :- numbers([Head|Tail]), is_in_asc_order(Head, Tail).
 
+/* Cave puzzle 2: Write your own prolog function */
+
+% This function loads a given function with 4 Parameters into our dynamic "translation_func"
+% It's complicated and simple at the same time, so I will make some comments to explain what happens here
+set_translation_func(Name) :-
+    % Since we don't want multiple translation functions we delete everything in our dynamic first
+    retractall(translation_func(_)),
+    % Here we get the Functor (https://www.swi-prolog.org/pldoc/man?predicate=functor/3) by name and arity in this case 4
+    functor(Help, Name, 4),
+    % Here we use clause (https://www.swi-prolog.org/pldoc/doc_for?object=clause/2) to get the clause body to the functor we just aquired
+    clause(Help , Body),
+    % Since the clause could tecnically be a fact (what we don't want in this case) we have to check for it (Body == true => fact) (\== <=> !=)
+    Body \== true,
+    % Now we use (https://www.swi-prolog.org/pldoc/man?predicate=%3D../2) to split our functor into the rule's name and it's arguments
+    % since we are only interested in it's arguments, because we actually want to rename the given function, we discard the head of the list
+    Help =.. [_|Arguments],
+    % Now we reasseble a new functor with a new function name (the one we choose: "translation_func") and the arguments as before
+    NewMethod =.. [translation_func | Arguments],
+    % Finally We build a new clause and add it to our dynamic database
+    assert(NewMethod :- Body).
+
+% Now that the function is loaded we want to check if the function translates correctly
+% To do that we just call the function with some data and expect some output in the last variable
+test_translation :-
+    % Check if database has function
+    translation_func(_),
+    % call function
+    translation_func([],[],[], Output),
+    % Make sure Output is actually set to some value and not just a variable
+    not(var(Output)),
+    % For testing purposes print the value of output
+    write(Output), nl.
+
 /* Waterfall room: crate puzzle */
 combination_lock('|---|---|---|---|---|---|\n|   |   |   |   |   |   |\n|---|---|---|---|---|---|\n').
 combination_lock_chars(X) :- combination_lock(Chars), atom_chars(Chars, X).
