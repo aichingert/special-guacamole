@@ -138,6 +138,11 @@ interact(_) :-
 
 marble_labels([4,6,1,3,5,2,7,8,9]).
 
+inspect_marbles :-
+        not(i_am_at(cave)),        
+        write('What do you intend to inspect?'), nl,
+        write('You are currently at the '), i_am_at(Loc), write(Loc),
+        write(' and there is nothing to inspect.'), nl, !.
 inspect_marbles :- marble_labels(L), print_marbles(L), nl.
 
 print_marbles([]) :- true, !.
@@ -146,11 +151,29 @@ print_marbles([Head | Tail]) :-
         write(Head), write(', '), print_marbles(Tail), !.
 
 roll :-
+        not(i_am_at(cave)),
+        write('What do you intend to roll?'), nl,
+        write('You are currently at the '), i_am_at(Loc), write(Loc),
+        write(' and there is nothing to roll.'), nl, !.
+roll :-
         marble_labels(Labels),
         retract(marble_labels(Labels)),
         remove_last(Labels, ReducedLabels, Elem),
         prepend(Elem, ReducedLabels, NewLabels),
         assert(marble_labels(NewLabels)), !.
+
+swap :-
+        not(i_am_at(cave)),
+        write('What do you intend to swap?'), nl,
+        write('You are currently at the '), i_am_at(Loc), write(Loc),
+        write(' and there is nothing to swap.'), nl, !.
+swap :-
+        marble_labels(Labels),
+        retract(marble_labels(Labels)),
+        swap_first_and_second(Labels, NewLabels),
+        assert(marble_labels(NewLabels)), !.
+
+swap_first_and_second([First, Second | Tail], [Second, First | Tail]).
 
 remove_last([Elem], [], Elem).
 remove_last([Head|Tail], [Head|NewTail], Elem) :- remove_last(Tail, NewTail, Elem).
@@ -372,6 +395,7 @@ describe(marbles) :-
         write('Try to get them in the right order.'), nl, nl,
         write('You have the following options to interact with them: '), nl,
         write('roll.                --which moves the circle once'), nl,
+        write('swap.                --which swaps the first two elements'), nl,
         write('inspect_marbles.     --shows you the order of the marbles'), nl, !.
 
 /* Reasons why the path in a specific direction is denied */
