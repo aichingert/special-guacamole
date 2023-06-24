@@ -1,14 +1,11 @@
 /* Stranded, by Aichinger Tobias, Ilming Winnie, Schludermann Julian. */
 
-:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1.
+:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1.
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
 
 /* Starting zone */
 
 i_am_at(beach).
-
-/* Ship complete */
-is_ship_complete :- false. /* TODO */
 
 /* Paths to other zones */
 
@@ -44,7 +41,7 @@ path(waterfall, e, cave).
 /* Locations of items */
 
 at(pager, beach).
-at(torch, waterfall_room).
+/*at(torch, waterfall_room).*/
 /* at(axe, cave). */
 
 /* Locations of objects */
@@ -52,6 +49,7 @@ at(torch, waterfall_room).
 objects([shipwreck, lonely_stone], beach).
 objects([tree], forest).
 objects([marbles], cave_entrance).
+objects([crate], waterfall_room).
 
 /* Pick up items. */
 
@@ -103,11 +101,16 @@ can_repair_wreck() :-
 interact(shipwreck) :-
         i_am_at(beach),
         not(is_ship_complete),
+        not(can_repair_wreck),!.
+interact(shipwreck) :-
+        i_am_at(beach),
+        not(is_ship_complete),
         can_repair_wreck,
         write('You successfully fixed the SHIPWRECK. You can now use the SHIP.'),
         assert(is_ship_complete),
         delete_wreck_items,!.
 interact(shipwreck) :-
+        i_am_at(beach),
         is_ship_complete,
         write('You already completed the ship. Venture out to escape'),!.
 
@@ -136,10 +139,30 @@ interact(tree) :-
         not(holding(axe)),
         write('You are trying to cut a tree with your hands?'), nl,
         write('Is everything alright inside your head?'), nl,
-        write('Maybe use that head of yours to find an axe.'), nl, !.      
+        write('Maybe use that head of yours to find an axe.'), nl, !.
+
+interact(crate) :-
+        i_am_at(waterfall_room),
+        not(has_unlocked_crate),
+        write('No matter how much you try, you just can\'t open this crate.'), nl,
+        write('So you will have to do it the boring way and crack the combination'), nl,
+        write('of the lock. After 25 Minutes of brute force and out of ideas you'), nl,
+        write('think to yourself: I got HERE from the BEACH in such LITTLE time.'), nl,
+        write('Just a race AGAINST the CLOCK and a fight against the BLOCK.'), nl,
+        write('If I STARTED in the NORTH I would have gotten here first.'), nl,
+        describe_crate_puzzle, nl, !.
+interact(crate) :-
+        i_am_at(waterfall_room),
+        has_unlocked_crate,
+        write('Luckily you already figured out how to unlock this crate.'), nl,
+        write('You never want to go through that pain again...'), !.
+interact(crate) :-
+        not(i_am_at(waterfall_room)),
+        write('?????????'), nl,
+        write('What exactly are you trying to do?'), nl, !.
 
 interact(_) :-
-        write('I don\'t see that here.'),
+        write('I don\'t see that here.'), nl,
         i_am_at(Place),
         at(_,Place),
         write('But there seems to be an item around here...'), nl,
@@ -197,6 +220,108 @@ is_in_asc_order(Start, [Head]) :- Start < Head, !.
 is_in_asc_order(Start, [Head|Tail]) :-
         Start < Head , is_in_asc_order(Head, Tail), !.
 cave_gate_part_one :- numbers([Head|Tail]), is_in_asc_order(Head, Tail).
+
+/* Waterfall room: crate puzzle */
+combination_lock('|---|---|---|---|---|---|\n|   |   |   |   |   |   |\n|---|---|---|---|---|---|\n').
+combination_lock_chars(X) :- combination_lock(Chars), atom_chars(Chars, X).
+combination_lock_values(['N', 'E', 'S', 'W']).
+comb_lock_user_state([0,0,0,0,0,0]).
+
+% Inaccessible zone starting from beach and north going counterclockwise: B: W, S, E; F: W; W: N, W
+comb_lock_secret_state([3,2,1,3,0,3]).
+
+% Hardcode go brrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+comb_lock_first_symbol_index(28).
+comb_lock_symbol_increase(4).
+comb_lock_symbols(6).
+
+are_arrays_equal([], []).
+are_arrays_equal([Head1|Tail1], [Head2|Tail2]) :-
+        Head1 == Head2,
+        are_arrays_equal(Tail1, Tail2).
+
+print_array([], _).
+print_array([Head], _) :- write(Head).
+print_array([Head|Tail], Delimiter) :-
+        write(Head),
+        write(Delimiter),
+        print_array(Tail, Delimiter).
+
+replace_nth(NewChar, 0, [_|Tail], [NewChar|Tail]).
+replace_nth(NewChar, Index, [Head|Tail], [Head|NewTail]) :-
+        Index > 0,
+        NewIndex is Index - 1,
+        replace_nth(NewChar, NewIndex, Tail, NewTail), !.
+
+get_nth(0, [Head|_], Head).
+get_nth(Index, [_|Tail], Elem) :-
+        Index > 0,
+        NewIndex is Index - 1,
+        get_nth(NewIndex, Tail, Elem), !.
+
+adapt_chars_to_state(Chars, [], _, Chars).
+adapt_chars_to_state(Chars, [Head|Tail], Count, Out) :-
+        combination_lock_values(Vals),
+        get_nth(Head, Vals, Symbol),
+        comb_lock_first_symbol_index(Base),
+        comb_lock_symbol_increase(Inc),
+        Idx is Count * Inc + Base,
+        replace_nth(Symbol, Idx, Chars, Intermediate),
+        NewCount is Count + 1,
+        adapt_chars_to_state(Intermediate, Tail, NewCount, Out).
+
+print_lock :-
+        i_am_at(waterfall_room),
+        combination_lock_chars(Chars),
+        comb_lock_user_state(State),
+        adapt_chars_to_state(Chars, State, 0, AdaptedChars),
+        print_array(AdaptedChars, ''), !.
+
+rotate(Pos) :-
+        i_am_at(waterfall_room),
+        not(has_unlocked_crate),
+        comb_lock_symbols(SymbolsCount),
+        Pos =< SymbolsCount,
+        Pos > 0,
+        comb_lock_user_state(OldStates),
+        retract(comb_lock_user_state(OldStates)),
+        Idx is Pos - 1,
+        get_nth(Idx, OldStates, OldState),
+        NewState is (OldState + 1) mod 4, % 4...possible symbols
+        replace_nth(NewState, Idx, OldStates, NewStates),
+        assert(comb_lock_user_state(NewStates)), !.
+
+pull_on_lock :-
+        i_am_at(waterfall_room),
+        not(has_unlocked_crate),
+        write('You pull on the lock and....'), nl,
+        comb_lock_secret_state(Solution),
+        comb_lock_user_state(User),
+        are_arrays_equal(Solution, User),
+        write('The lock clicks open. Congratulations!'), nl,
+        write('You open the crate and look inside...'), nl,
+        write('It\'s a torch! Weird why would anyone leave it here?'), nl,
+        write('You better pick it up fast so the owner doesn\'t catch you redhanded'), nl,
+        assert(has_unlocked_crate),
+        assert(at(torch, waterfall_room))
+        ;
+        write('Nothing.'), nl,
+        write('Damn it!'), nl,
+        write('If you\'re stuck, interact with the crate again'), nl,
+        write('and make sure to think outside the box.'), nl, !.
+
+describe_crate_puzzle :-
+        i_am_at(waterfall_room),
+        write('It\'s puzzle time'), nl,
+        write('You are given a combination lock with a sequence consisting of five symbols.'), nl,
+        write('Each Slot can contain: '), combination_lock_values(Vals), print_array(Vals, ', '), nl,
+        write('You can use the following commands:'), nl,
+        write('rotate(Pos).              -- rotates the disc at the given position (first disc = 1)'), nl,
+        write('pull_on_lock.             -- pull on the lock\'s shackle and check if it unlocks'), nl,
+        write('print_lock.               -- prints the current state of the lock'), nl,
+        write('Good Luck! You are gonna need it.'), nl,
+        write('Current lock state: '), nl,
+        print_lock, !.
 
 /* These rules define the direction letters as calls to go/1. */
 
@@ -257,7 +382,9 @@ notice_items_at(_).
 notice_objects_at(Place) :-
         write('Looking around you also see the following:'), nl,
         objects(Objects, Place),
-        describe_objects(Objects).
+        describe_objects(Objects)
+        ;
+        write('Nothing...').
 
 
 describe_objects([Head|Tail]) :-
@@ -357,7 +484,7 @@ describe(waterfall) :-
         write('A waterfall you can drink the fresh water directly from it.'), nl,
         write('Maybe you should explore some more before you continue your journey.'), nl.
 describe(waterfall_room) :-
-        write('You are behind the waterfall. You see two wall torches.'), nl.
+        write('You are behind the waterfall. It\'s really dark in here, but you can still see something.'), nl.
 
 describe(cave) :-
         write('A mysterious dark cave. If you want to enter it grab some light source.'), nl.
@@ -389,6 +516,18 @@ describe(marbles) :-
         write('roll.                --which moves the circle once'), nl,
         write('swap.                --which swaps the first two elements'), nl,
         write('inspect_marbles.     --shows you the order of the marbles'), nl, !.
+
+describe(crate) :-
+        write('A crate.'), nl,
+        has_unlocked_crate,
+        holding(torch),
+        write('Do you remeber it? Your torch. You stole it from here... '),
+        nl,
+        write('Luckly you don\'t have to find out the passcode again...'), nl, !
+        ;
+        write('You can barely see anything in here but it looks like it '),
+        nl,
+        write('has a combination lock guarding whatever is inside.'), !.
 
 /* Reasons why the path in a specific direction is denied */
 
