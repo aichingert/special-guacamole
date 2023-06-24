@@ -3,11 +3,11 @@
 :- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1.
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
 
-/* Starting zone */
+/* === Starting zone === */
 
 i_am_at(beach).
 
-/* Paths to other zones */
+/* === Paths to other zones === */
 
 path(beach, n, forest).
 path(beach, s, ocean) :- is_ship_complete, write('TODO: ending'), nl, finish.
@@ -26,7 +26,14 @@ path(cave, enter, cave_entrance) :-
         write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
         write('You remember that you collected a torch.'), nl,
         write('You light the torch and start to see the entrance of the cave.'), nl.
-
+path(cave_entrance, enter, cave_gate) :-
+        cave_gate_part_one,
+        write('The stone gate moves a little bit but not enough for you to pass through.'), nl,
+        write('As you are stepping closer you see a few scratches in the wall.'), nl,
+        write('Trying to see it better you bring the torch closer and you realise'), nl,
+        write('that this is the language of an old civilization. You need to decipher the message!'), nl, 
+        write('What you currently see is:'), nl,
+        write(''). /* TODO: come up with mysterious message */
 
 path(forest, n, waterfall).
 path(forest, e, cave).
@@ -41,7 +48,7 @@ path(waterfall, e, cave).
 /* Locations of items */
 
 at(pager, beach).
-/*at(torch, waterfall_room).*/
+/* at(torch, waterfall_room).*/
 /* at(axe, cave). */
 
 /* Locations of objects */
@@ -70,7 +77,6 @@ take(_) :-
         write('I don\'t see it here.'),
         nl,
         false.
-
 
 /* Helpers for shipwreck Interaction */
 repair_items([wood, saw, hammer, nails, cloth]).
@@ -147,9 +153,9 @@ interact(crate) :-
         write('No matter how much you try, you just can\'t open this crate.'), nl,
         write('So you will have to do it the boring way and crack the combination'), nl,
         write('of the lock. After 25 Minutes of brute force and out of ideas you'), nl,
-        write('think to yourself: I got HERE from the BEACH in such LITTLE time.'), nl,
+        write('think to yourself: I got HERE FROM the BEACH in such LITTLE TIME.'), nl,
         write('Just a race AGAINST the CLOCK and a fight against the BLOCK.'), nl,
-        write('If I STARTED in the NORTH I would have gotten here first.'), nl,
+        write('If I STARTed in the NORTH I would have gotten here first.'), nl,
         describe_crate_puzzle, nl, !.
 interact(crate) :-
         i_am_at(waterfall_room),
@@ -161,6 +167,14 @@ interact(crate) :-
         write('?????????'), nl,
         write('What exactly are you trying to do?'), nl, !.
 
+interact(gate) :-
+        not(i_am_at(cave_entrance)),
+        write('Are your delusions getting out of hand? There is no gate at the '), i_am_at(Loc), write(Loc), nl,
+        write('Maybe rest for a bit so you can focus again.'), nl, !.
+interact(gate) :-
+        cave_gate_part_one,
+        
+
 interact(_) :-
         write('I don\'t see that here.'), nl,
         i_am_at(Place),
@@ -171,25 +185,29 @@ interact(_) :-
 
 /* === Cave zone === */
 
-marble_labels([4,6,1,3,5,2,7,8,9]).
+marble_labels([3,1,4,2,9,8,6,7,5]).
 
+wrong_place(Loc, Action) :-
+        write('What do you intend to '), write(Action),
+        write('? You are currently at the '), write(Loc),
+        write(' and there is nothing to '), write(Action), nl, !.
+
+inspect_marbles :- not(i_am_at(cave)), i_am_at(Loc), wrong_place(Loc, 'inspect'), !.
 inspect_marbles :-
-        not(i_am_at(cave)),        
-        write('What do you intend to inspect?'), nl,
-        write('You are currently at the '), i_am_at(Loc), write(Loc),
-        write(' and there is nothing to inspect.'), nl, !.
-inspect_marbles :- marble_labels(L), print_marbles(L), nl.
+        cave_gate_part_one,
+        write('You already solved the puzzle, you don\'t have to inspect the marbles anymore.'), nl, !.
+inspect_marbles :- 
+        marble_labels(L), print_marbles(L), nl.
 
 print_marbles([]) :- true, !.
 print_marbles([Head]) :- write(Head), !.
 print_marbles([Head | Tail]) :-
         write(Head), write(', '), print_marbles(Tail), !.
 
+roll :- not(i_am_at(cave_entrance)), i_am_at(Loc), wrong_place(Loc, 'roll'), !.
 roll :-
-        not(i_am_at(cave)),
-        write('What do you intend to roll?'), nl,
-        write('You are currently at the '), i_am_at(Loc), write(Loc),
-        write(' and there is nothing to roll.'), nl, !.
+        cave_gate_part_one,
+        write('You already solved the puzzle, you don\'t have to roll anymore.'), nl, !.
 roll :-
         marble_labels(Labels),
         retract(marble_labels(Labels)),
@@ -197,11 +215,10 @@ roll :-
         prepend(Elem, ReducedLabels, NewLabels),
         assert(marble_labels(NewLabels)), !.
 
+swap :- not(i_am_at(cave_entrance)), i_am_at(Loc), wrong_place(Loc, 'swap'), !.
 swap :-
-        not(i_am_at(cave)),
-        write('What do you intend to swap?'), nl,
-        write('You are currently at the '), i_am_at(Loc), write(Loc),
-        write(' and there is nothing to swap.'), nl, !.
+        cave_gate_part_one,
+        write('You already solved the puzzle, you don\'t have to roll anymore.'), nl, !.        
 swap :-
         marble_labels(Labels),
         retract(marble_labels(Labels)),
@@ -219,6 +236,7 @@ is_in_asc_order(_, []) :- true, !.
 is_in_asc_order(Start, [Head]) :- Start < Head, !.
 is_in_asc_order(Start, [Head|Tail]) :-
         Start < Head , is_in_asc_order(Head, Tail), !.
+
 cave_gate_part_one :- numbers([Head|Tail]), is_in_asc_order(Head, Tail).
 
 /* Waterfall room: crate puzzle */
@@ -335,7 +353,6 @@ w :- go(w).
 
 enter :- go(enter).
 back :- go(back).
-
 
 /* Move in a given direction */
 
@@ -508,10 +525,14 @@ describe(tree) :-
         write('Here are only trees, all you can see are trees.'), nl.
 
 describe(marbles) :-
-        write('These marbles are not in ascending order but they are in a circular formation.'), nl,
+        write('These marbles are in a random order but they are in a circular formation.'), nl,
         write('So if you move one of them to the right the element at the bottom is going to'), nl,
         write('appear at the front again'), nl,
-        write('Try to get them in the right order.'), nl, nl,
+        write('There is a special rule which the marbles have to follow so that the gate opens.'), nl, 
+        write('For example the following numbers are matching that rule:'), nl,
+        write('2, 4, 16'), nl,
+        write('3, 9, 81'), nl,
+        write('1, 2, 3'), nl,
         write('You have the following options to interact with them: '), nl,
         write('roll.                --which moves the circle once'), nl,
         write('swap.                --which swaps the first two elements'), nl,
