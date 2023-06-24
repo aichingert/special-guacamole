@@ -22,18 +22,24 @@ path(beach, s, ocean) :-
 path(forest, n, waterfall).
 path(forest, e, cave).
 path(forest, s, beach).
+path(waterfall, s, forest).
+path(cave, w, forest).
+path(waterfall_room, back, waterfall).
+path(cave_entrance, back, cave).
 
 path(waterfall, e, cave).
 
 /* Locations of items */
 
 at(pager, beach).
+at(torch, waterfall_room).
 /* at(axe, cave). */
 
 /* Locations of objects */
 
 objects([shipwreck, lonely_stone], beach).
 objects([tree], forest).
+objects([marbles], cave_entrance).
 
 /* Pick up items. */
 
@@ -120,27 +126,6 @@ interact(tree) :-
         write('Is everything alright inside your head?'), nl,
         write('Maybe use that head of yours to find an axe.'), nl, !.      
 
-interact(cave_entrance) :-
-        i_am_at(cave),
-        cave_gate_part_one, !.
-interact(cave_entrance) :-
-        not(i_am_at(cave)),
-        write('I don\'t see a cave? Do you? Travel a bit more to explore the area.'), nl, !.
-interact(cave_entrance) :-
-        not(cave_gate_part_one),
-        write('There is a huge stone gate infront of you. On the right site'), nl,
-        write('you notice a few small marbles integrated in the wall with numbers'), nl,
-        write('on them. You are able interact with the marbles.'), nl, !.
-interact(marbles) :-
-        not(cave_gate_part_one),
-        write('These marbles are not in ascending order but they are in a circular formation.'), nl,
-        write('So if you move one of them to the right the element at the bottom is going to'), nl,
-        write('appear at the front again'), nl,
-        write('Try to get them in the right order.'), nl, nl,
-        write('You have the following options to interact with them: '), nl,
-        write('roll.                --which moves the circle once'),
-        write('inspect_marbles.     --shows you the order of the marbles'), nl, !.
-
 interact(_) :-
         write('I don\'t see that here.'),
         i_am_at(Place),
@@ -176,7 +161,6 @@ is_in_asc_order(_, []) :- true, !.
 is_in_asc_order(Start, [Head]) :- Start < Head, !.
 is_in_asc_order(Start, [Head|Tail]) :-
         Start < Head , is_in_asc_order(Head, Tail), !.
-
 cave_gate_part_one :- numbers([Head|Tail]), is_in_asc_order(Head, Tail).
 
 /* These rules define the direction letters as calls to go/1. */
@@ -188,6 +172,8 @@ s :- go(s).
 e :- go(e).
 
 w :- go(w).
+
+go_back :- go(back).
 
 
 /* Move in a given direction */
@@ -210,7 +196,7 @@ enter(waterfall) :-
         i_am_at(waterfall),
         retract(i_am_at(waterfall)),
         assert(i_am_at(waterfall_room)),
-        write('You found a secret chamber behind the waterfall. Congratulations!'), nl,  !.
+        write('You found a secret chamber behind the waterfall. Congratulations!'), nl, look, !.
 
 enter(cave) :-
         i_am_at(cave),
@@ -221,13 +207,15 @@ enter(cave) :-
         i_am_at(cave),
         holding(torch),
         retract(i_am_at(cave)),
-        assert(i_am_at(cave_interiour)),
+        assert(i_am_at(cave_entrance)),
         write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
         write('You remember that you collected a torch.'), nl,
-        write('You light the torch and start to see the interour of the cave.'), nl, !.
+        write('You light the torch and start to see the entrance of the cave.'), nl,
+        look, !.
 
-enter(_) :-
-        write('You are currently not able to enter anything'), nl.
+enter(X) :-
+        not(i_am_at(X)),
+        write('You are currently not able to enter anything'), nl, !.
 
 /* Look around you */
 
@@ -237,7 +225,7 @@ look :-
         nl,
         notice_items_at(Place),
         nl,
-        notice_objects_at(Place).
+        (not(notice_objects_at(Place)), !); true.
 
 /* These rules set up a loop to mention all the objects
    in your vicinity. */
@@ -309,6 +297,7 @@ instructions :-
         write('take(Item).        -- to pick up an item.'), nl,
         write('interact(Object).  -- to interact with an object'), nl,
         write('enter(Location).   -- to step into a site.'), nl,
+        write('go_back.           -- opposite of enter.'), nl,
         write('look.              -- to look around you again.'), nl,
         write('instructions.      -- to see this message again.'), nl,
         write('items.             -- to see all items you are carrying'), nl,
@@ -353,12 +342,13 @@ describe(waterfall) :-
         write('A waterfall you can drink the fresh water directly from it.'), nl,
         write('Maybe you should explore some more before you continue your journey.'), nl.
 describe(waterfall_room) :-
-        write('You are behind the waterfall altough it is not very brigth, it is bright enough for you to see.'), nl.
+        write('You are behind the waterfall. You see two wall torches.'), nl.
 
 describe(cave) :-
         write('A mysterious dark cave. If you want to enter it grab some light source.'), nl.
-describe(cave_interiour) :-
-        write('The interiour of the cave is cramped you can not see anything interesting from here.'), nl.
+describe(cave_entrance) :-
+        write('There is a huge stone gate infront of you. On the right site you'), nl,
+        write('notice a few small marbles integrated in the wall with numbers on them.'), nl, !.
 
 /* Descriptions of objects */
 describe(shipwreck) :-
@@ -374,6 +364,15 @@ describe(lonely_stone) :-
 describe(tree) :-
         write('A tree.'), nl,
         write('Here are only trees, all you can see are trees.'), nl.
+
+describe(marbles) :-
+        write('These marbles are not in ascending order but they are in a circular formation.'), nl,
+        write('So if you move one of them to the right the element at the bottom is going to'), nl,
+        write('appear at the front again'), nl,
+        write('Try to get them in the right order.'), nl, nl,
+        write('You have the following options to interact with them: '), nl,
+        write('roll.                --which moves the circle once'), nl,
+        write('inspect_marbles.     --shows you the order of the marbles'), nl, !.
 
 /* Reasons why the path in a specific direction is denied */
 
