@@ -1,6 +1,6 @@
 /* Stranded, by Aichinger Tobias, Ilming Winnie, Schludermann Julian. */
 
-:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0.
+:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1.
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
 
 /* Starting zone */
@@ -151,9 +151,9 @@ interact(_) :-
 
 /* === Cave zone === */
 
-numbers([4,6,1,3,5,2,7,8,9]).
+marble_labels([4,6,1,3,5,2,7,8,9]).
 
-inspect_marbles :- numbers(L), print_marbles(L), nl.
+inspect_marbles :- marble_labels(L), print_marbles(L), nl.
 
 print_marbles([]) :- true, !.
 print_marbles([Head]) :- write(Head), !.
@@ -161,14 +161,16 @@ print_marbles([Head | Tail]) :-
         write(Head), write(', '), print_marbles(Tail), !.
 
 roll :-
-        numbers(L),
-        remove_last(L, Last),
-        prepend(Last, [], L).
+        marble_labels(Labels),
+        retract(marble_labels(Labels)),
+        remove_last(Labels, ReducedLabels, Elem),
+        prepend(Elem, ReducedLabels, NewLabels),
+        assert(marble_labels(NewLabels)), !.
 
-remove_last([Last], Last).
-remove_last([_ | Tail], Last) :- remove_last(Tail, Last), !.
+remove_last([Elem], [], Elem).
+remove_last([Head|Tail], [Head|NewTail], Elem) :- remove_last(Tail, NewTail, Elem).
 
-prepend(Elem, List, [Elem | List]).
+prepend(Elem, List, [Elem|List]).
 
 is_in_asc_order(_, []) :- true, !.
 is_in_asc_order(Start, [Head]) :- Start < Head, !.
