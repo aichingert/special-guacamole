@@ -15,9 +15,21 @@ is_ship_complete :- false. /* TODO */
 path(beach, n, forest).
 path(beach, s, ocean) :- is_ship_complete, write('TODO: ending'), nl, finish.
 path(beach, s, ocean) :-
-                        write('Are you out of your mind? '), nl,
-                        write('Trying to cross the ocean without a ship seems like a'), nl,
-                        write('suicide mission. You\'re lucky you survived!'), nl, !, fail.
+        write('Are you out of your mind? '), nl,
+        write('Trying to cross the ocean without a ship seems like a'), nl,
+        write('suicide mission. You\'re lucky you survived!'), nl, !, fail.
+path(waterfall, enter, waterfall_room) :-
+        write('You found a secret chamber behind the waterfall. Congratulations!'), nl.
+
+path(cave, enter, cave_entrance) :-
+        not(holding(torch)),
+        write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
+        write('You are starting to get scared as you hear strange noises. You run out of the cave.'), nl, !, fail.
+path(cave, enter, cave_entrance) :-
+        write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
+        write('You remember that you collected a torch.'), nl,
+        write('You light the torch and start to see the entrance of the cave.'), nl.
+
 
 path(forest, n, waterfall).
 path(forest, e, cave).
@@ -80,12 +92,12 @@ delete_wreck_items :-
 
 can_repair_wreck() :-
         repair_items(Items), (
-                not(has_items(Items)),
-                write('To successfully repair the wreck, gather those materials first!'),
-                nl, !, fail
-                ;
-                write('Congratulations you gatherered all needed resources!'),
-                nl, !).
+        not(has_items(Items)),
+        write('To successfully repair the wreck, gather those materials first!'),
+        nl, !, fail
+        ;
+        write('Congratulations you gatherered all needed resources!'),
+        nl, !).
 
 /* Interact with objects */
 interact(shipwreck) :-
@@ -196,7 +208,8 @@ e :- go(e).
 
 w :- go(w).
 
-go_back :- go(back).
+enter :- go(enter).
+back :- go(back).
 
 
 /* Move in a given direction */
@@ -214,27 +227,6 @@ go(_) :-
         write('You can\'t go that way!'), nl.
 
 /* Step into site */
-
-enter(waterfall) :-
-        i_am_at(waterfall),
-        retract(i_am_at(waterfall)),
-        assert(i_am_at(waterfall_room)),
-        write('You found a secret chamber behind the waterfall. Congratulations!'), nl, look, !.
-
-enter(cave) :-
-        i_am_at(cave),
-        not(holding(torch)),
-        write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
-        write('You are starting to get scared as you hear strange noises. You run out of the cave.'), nl, !.
-enter(cave) :-
-        i_am_at(cave),
-        holding(torch),
-        retract(i_am_at(cave)),
-        assert(i_am_at(cave_entrance)),
-        write('While going deeper into the cave you realize that you can\'t see anything.'), nl,
-        write('You remember that you collected a torch.'), nl,
-        write('You light the torch and start to see the entrance of the cave.'), nl,
-        look, !.
 
 enter(X) :-
         not(i_am_at(X)),
@@ -319,8 +311,8 @@ instructions :-
         write('n.  s.  e.  w.     -- to go in that direction.'), nl,
         write('take(Item).        -- to pick up an item.'), nl,
         write('interact(Object).  -- to interact with an object'), nl,
-        write('enter(Location).   -- to step into a site.'), nl,
-        write('go_back.           -- opposite of enter.'), nl,
+        write('enter.             -- to step into a site.'), nl,
+        write('back.              -- opposite of enter.'), nl,
         write('look.              -- to look around you again.'), nl,
         write('instructions.      -- to see this message again.'), nl,
         write('items.             -- to see all items you are carrying'), nl,
@@ -403,6 +395,6 @@ describe(marbles) :-
 deny(beach, e) :- write('You probably shouldn\'t explore the beach right now.'), nl.
 deny(beach, w) :- deny(beach, e).
 deny(forest, w) :-
-                write('You start wandering west. Suddenly you hear a strange noise.'), nl,
-                write('This sound does not seem very friendly. The last thing you would want right now'), nl,
-                write('is to encounter something hostile... So you turn around and go back to where you came from.'), nl.
+        write('You start wandering west. Suddenly you hear a strange noise.'), nl,
+        write('This sound does not seem very friendly. The last thing you would want right now'), nl,
+        write('is to encounter something hostile... So you turn around and go back to where you came from.'), nl.
