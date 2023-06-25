@@ -29,12 +29,12 @@ path(cave, enter, cave_entrance) :-
         write('You light the torch and start to see the entrance of the cave.'), nl.
 path(cave_entrance, enter, inner_cave_gate) :-
         not(cave_gate_part_one),
-        write('You have to solve the puzzle first.'), nl, !.
+        write('You have to solve the puzzle first.'), nl, !, fail.
 path(cave_entrance, enter, inner_cave_gate) :-
         write('You are going deeper into the cave.'), nl.
 path(inner_cave_gate, enter, chamber) :-
         not(cave_gate_part_two),
-        write('You have to submit the key first, maybe decipher the ancient message for information first!'), nl, !.
+        write('You have to submit the key first, maybe decipher the ancient message for information first!'), nl, !, fail.
 path(inner_cave_gate, enter, chamber) :-
         write('You are now in the deepest part of the cave.'), nl, !.
 
@@ -269,7 +269,6 @@ translate(Ancient, Latin, [Head|Tail], [NewHead|NewTail]) :-
 
 cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
 
-is_correct_key([]) :- false, !.
 is_correct_key(Key) :- Key == 'LOAL', !.
 
 % This function loads a given function with 4 Parameters into our dynamic "translation_func"
@@ -601,6 +600,7 @@ describe(cave_entrance) :-
         write('There is a huge stone gate infront of you. On the right site you'), nl,
         write('notice a few small marbles integrated in the wall with numbers on them.'), nl, !.
 describe(inner_cave_gate) :-
+        not(cave_gate_part_two),
         write('The stone gate opens, as you walk inside and get deeper you see another gate.'), nl,
         write('While getting closer you see a few scratches on the wall and a sheet of papyrus on the floor.'), nl,
         write('Trying to see it better you bring the torch closer and you realise'), nl,
@@ -615,6 +615,8 @@ describe(inner_cave_gate) :-
         write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, nl,
         write('After you successfully translated the message pass the key:'), nl,
         write('pass_key(Key).                     --is used to pass a key to the gate(Key is a string)'), nl, !.
+describe(inner_cave_gate) :-
+        write('This is the second gate of the cave.'), nl, !.
 describe(chamber) :-
         write('This is the secrete treasure vault from the ancient civilization where they stored their tools.'), nl, !.
 
@@ -637,6 +639,7 @@ describe(axe) :-
         write('An axe can be used to cut trees.'), nl.
 
 describe(marbles) :-
+        not(cave_gate_part_one),
         write('These marbles are in a random order but they are in a circular formation.'), nl,
         write('So if you move one of them to the right the element at the bottom is going to'), nl,
         write('appear at the front again'), nl,
