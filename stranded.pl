@@ -30,6 +30,8 @@ path(cave, enter, cave_entrance) :-
 path(cave_entrance, enter, inner_cave_gate) :-
         not(cave_gate_part_one),
         write('You have to solve the puzzle first.'), nl, !.
+path(cave_entrance, enter, inner_cave_gate) :-
+        write('You are going deeper into the cave.'), nl.
 path(inner_cave_gate, enter, chamber) :-
         not(cave_gate_part_two),
         write('You have to submit the key first, maybe decipher the ancient message for information first!'), nl, !.
@@ -170,20 +172,7 @@ interact(crate) :-
         not(i_am_at(waterfall_room)),
         write('?????????'), nl,
         write('What exactly are you trying to do?'), nl, !.
-
-interact(gate) :-
-        not(i_am_at(inner_cave_gate)),
-        write('Are your delusions getting out of hand? There is no gate at the '), i_am_at(Loc), write(Loc), nl,
-        write('Maybe rest for a bit so you can focus again.'), nl, !.
-interact(gate) :-
-        not(cave_gate_part_one),
-        write('How do you know about this? Put the marbles in the right order first!'), !.
-interact(gate) :-
-        not(translation_func(_)),
-        write('Write your own prolog rule first and set it with set_translation_func.'), !.
-interact(gate) :-
-        cave_gate_part_one.
-        
+      
 interact(_) :-
         write('I don\'t see that here.'), nl,
         i_am_at(Place),
@@ -248,10 +237,7 @@ is_in_asc_order(Start, [Head|Tail]) :-
 
 cave_gate_part_one :- marble_labels([Head|Tail]), is_in_asc_order(Head, Tail).
 
-/* Cave puzzle 2: Write your own prolog function
- *
- * Message: The key is the best school subject -> LOAL
-*/
+/* Cave puzzle 2: Write your own prolog function */
 
 key().
 pass_key(Key) :- assert(key(Key)).
@@ -279,7 +265,7 @@ translate(Ancient, Latin, [Head|Tail], [NewHead|NewTail]) :-
 cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
 
 is_correct_key([]) :- false, !.
-is_correct_key([Head | Tail]) :- are_arrays_equal(Head, ['L','O','A','L']) ; is_correct_key(Tail).
+is_correct_key(Key) :- are_arrays_equal(Key, ['L','O','A','L']), !.
 
 % This function loads a given function with 4 Parameters into our dynamic "translation_func"
 % It's complicated and simple at the same time, so I will make some comments to explain what happens here
@@ -306,7 +292,10 @@ test_translation :-
     % Check if database has function
     translation_func(_),
     % call function
-    translation_func([],[],[], Output),
+    get_ancient_alphabet(Alphabet),
+    get_translation(Translation),
+    input(Input),
+    translation_func(Alphabet, Translation, Input, Output),
     % Make sure Output is actually set to some value and not just a variable
     not(var(Output)),
     % For testing purposes print the value of output
@@ -589,12 +578,16 @@ describe(inner_cave_gate) :-
         write('that this is the language of an old civilization and on the papyrus is the translation for it.'), nl,
         write('You need to decipher the message to get the secret key!'), nl, 
         write('To accomplish this write your own prolog rule and use the provided utilities to check if it is right.'), nl,
-        write('Your rule should have the following fields => AncientAlphabet(List), Translation(List), Input(List), Output(List)'), nl,
+        write('Your rule should have the following arguments => AncientAlphabet(List), Translation(List), Input(List), Output(List)'), nl,
         write('Where AncientAlphabet maps to Translation. Utils are listed below: '), nl,
         write('set_translation_func(Name).        --sets your rule, expects your rules name as parameter'), nl,
         write('test_translation.                  --which tests your rule'), nl,
         write('get_ancient_alphabet(Alphabet)     --puts the ancient alphabet in Alphabet'), nl,
-        write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, !.
+        write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, nl,
+        write('After you successfully translated the message pass the key:'), nl,
+        write('pass_key(Key).                     --is used to pass a key to the gate'), nl, !.
+describe(chamber) :-
+        write('This is the secrete treasure vault from the ancient civilization where they stored their tools.'), nl, !.
 
 /* Descriptions of objects */
 describe(shipwreck) :-
