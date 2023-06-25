@@ -559,6 +559,8 @@ items :-
         ;
         not(print_items), !.
 
+inventory :- items.
+
 print_items :-
         holding(X),
         write('- '),
@@ -597,6 +599,7 @@ instructions :-
         write('look.              -- to look around you again.'), nl,
         write('instructions.      -- to see this message again.'), nl,
         write('items.             -- to see all items you are carrying.'), nl,
+        write('inventory.         -- same as items.'), nl,
         write('halt.              -- to end the game and quit.'), nl,
         nl.
 
