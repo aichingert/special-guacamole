@@ -157,7 +157,8 @@ interact(crate) :-
         write('So you will have to do it the boring way and crack the combination'), nl,
         write('of the lock. After 25 Minutes of brute force and out of ideas you'), nl,
         write('think to yourself: I got HERE FROM the BEACH in such LITTLE TIME.'), nl,
-        write('Just a race AGAINST the CLOCK and a fight against the BLOCK.'), nl,
+        write('It was just a race AGAINST the CLOCK. You would like to COUNT sheep now'), nl,
+        write('and sleep a bit, but there is a huge rock BLOCKing your view of the sky'), nl,
         write('If I STARTed in the NORTH I would have gotten here first.'), nl,
         describe_crate_puzzle, nl, !.
 interact(crate) :-
@@ -390,10 +391,11 @@ pull_on_lock :-
         are_arrays_equal(Solution, User),
         write('The lock clicks open. Congratulations!'), nl,
         write('You open the crate and look inside...'), nl,
-        write('It\'s a torch! Weird why would anyone leave it here?'), nl,
-        write('You better pick it up fast so the owner doesn\'t catch you redhanded'), nl,
+        write('It\'s a torch! Well and some nails... Weird why would anyone leave this here?'), nl,
+        write('You better pick it up fast so the owner doesn\'t catch you red handed'), nl,
         assert(has_unlocked_crate),
-        assert(at(torch, waterfall_room))
+        assert(at(torch, waterfall_room)),
+        assert(at(nails, waterfall_room))
         ;
         write('Nothing.'), nl,
         write('Damn it!'), nl,
