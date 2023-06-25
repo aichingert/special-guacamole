@@ -28,22 +28,13 @@ path(cave, enter, cave_entrance) :-
         write('You remember that you collected a torch.'), nl,
         write('You light the torch and start to see the entrance of the cave.'), nl.
 path(cave_entrance, enter, inner_cave_gate) :-
-        cave_gate_part_one,
-        write('The stone gate opens, as you walk inside and get deeper you see another gate.'), nl,
-        write('While getting closer you see a few scratches on the wall and a sheet of papyrus on the floor.'), nl,
-        write('Trying to see it better you bring the torch closer and you realise'), nl,
-        write('that this is the language of an old civilization and on the papyrus is the translation for it.'), nl,
-        write('You need to decipher the message to get the secret key!'), nl, 
-        write('To accomplish this write your own prolog rule and use the provided utilities to check if it is right.'), nl,
-        write('Your rule should have the following fields => AncientAlphabet(List), Translation(List), Input(List), Output(List)'), nl,
-        write('Where AncientAlphabet maps to Translation. Utils are listed below: '), nl,
-        write('set_translation_func(Name).        --sets your rule, expects your rules name as parameter'), nl,
-        write('test_translation.                  --which tests your rule'), nl,
-        write('get_ancient_alphabet(Alphabet)     --puts the ancient alphabet in Alphabet'), nl,
-        write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, !.
+        not(cave_gate_part_one),
+        write('You have to solve the puzzle first.'), nl, !.
 path(inner_cave_gate, enter, chamber) :-
-        cave_gate_part_two,
-        write('You finally enter the deepest part of the cave.'), nl, !.
+        not(cave_gate_part_two),
+        write('You have to submit the key first, maybe decipher the ancient message for information first!'), nl, !.
+path(inner_cave_gate, enter, chamber) :-
+        write('You are now in the deepest part of the cave.'), nl, !.
 
 path(forest, n, waterfall).
 path(forest, e, cave).
@@ -53,6 +44,7 @@ path(cave, w, forest).
 path(waterfall_room, back, waterfall).
 path(cave_entrance, back, cave).
 path(inner_cave_gate, back, cave_entrance).
+path(chamber, back, inner_cave_gate).
 
 path(waterfall, e, cave).
 
@@ -60,6 +52,7 @@ path(waterfall, e, cave).
 
 at(pager, beach).
 at(axe, inner_cave_gate).
+at(hammer, chamber).
 
 /* Locations of objects */
 
@@ -259,20 +252,25 @@ cave_gate_part_one :- marble_labels([Head|Tail]), is_in_asc_order(Head, Tail).
  * Message: The key is the best school subject -> LOAL
 */
 
-key([]).
+key().
 pass_key(Key) :- assert(key(Key)).
 
 input(['ፚ', 'ᶋ឵', 'ⵇ', ' ', 'Ψ', 'ⵇ', 'Հ', ' ', 'Æ', 'ꝟ', ' ', 'ፚ', 'ᶋ឵', 'ⵇ', ' ', '∆', 'ⵇ', 'ꝟ', 'ፚ', ' ', 'ꝟ', 'ш', '∆', '∰ަ', 'ⵇ', '⅁', 'ፚ']).
 
 get_ancient_alphabet(Alphabet) :- 
-        Alphabet    = ['⍼', '∆', '⅁', 'ᙝ', 'ⵇ', '▙', '☭', 'ᶋ឵', 'Æ', '∰ަ', 'Ψ', 'ᗅ', '⏻'','⌬', 'Ø', '⌘', '♗', '๑', 'ꝟ', 'ፚ', 'ш', 'Ξ', 'ᘜ', '⊙', 'Հ', '℻'', ' '].
+        Alphabet    = ['⍼', '∆', '⅁', 'ᙝ', 'ⵇ', '▙', '☭', 'ᶋ឵', 'Æ', '∰ަ', 'Ψ', 'ᗅ', '⏻','⌬', 'Ø', '⌘', '♗', '๑', 'ꝟ', 'ፚ', 'ш', 'Ξ', 'ᘜ', '⊙', 'Հ', '℻', ' '].
 get_translation(Translation) :-
         Translation = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '].
 
 cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
+      
+/*
+translation(AncientAlphabet, Translation, [], Output).
+translation(AncientAlphabet, Translation, [Cur|Input], Output) :-
+*/
 
-is_correct_key([]) :- false.
-is_correct_key([Head | Tail]) :- are_arrays_equal(Head, ['L','O','A','L']) ; is_correct_key(Tail), !.
+is_correct_key([]) :- false, !.
+is_correct_key([Head | Tail]) :- are_arrays_equal(Head, ['L','O','A','L']) ; is_correct_key(Tail).
 
 % This function loads a given function with 4 Parameters into our dynamic "translation_func"
 % It's complicated and simple at the same time, so I will make some comments to explain what happens here
@@ -575,7 +573,18 @@ describe(cave_entrance) :-
         write('There is a huge stone gate infront of you. On the right site you'), nl,
         write('notice a few small marbles integrated in the wall with numbers on them.'), nl, !.
 describe(inner_cave_gate) :-
-        write('You walk even deeper in the cave and see a new gate with a new problem in the distance'), nl, !.
+        write('The stone gate opens, as you walk inside and get deeper you see another gate.'), nl,
+        write('While getting closer you see a few scratches on the wall and a sheet of papyrus on the floor.'), nl,
+        write('Trying to see it better you bring the torch closer and you realise'), nl,
+        write('that this is the language of an old civilization and on the papyrus is the translation for it.'), nl,
+        write('You need to decipher the message to get the secret key!'), nl, 
+        write('To accomplish this write your own prolog rule and use the provided utilities to check if it is right.'), nl,
+        write('Your rule should have the following fields => AncientAlphabet(List), Translation(List), Input(List), Output(List)'), nl,
+        write('Where AncientAlphabet maps to Translation. Utils are listed below: '), nl,
+        write('set_translation_func(Name).        --sets your rule, expects your rules name as parameter'), nl,
+        write('test_translation.                  --which tests your rule'), nl,
+        write('get_ancient_alphabet(Alphabet)     --puts the ancient alphabet in Alphabet'), nl,
+        write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, !.
 
 /* Descriptions of objects */
 describe(shipwreck) :-
