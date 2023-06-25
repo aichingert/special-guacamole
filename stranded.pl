@@ -1,7 +1,7 @@
 /* Stranded, by Aichinger Tobias, Ilming Winnie, Schludermann Julian. */
 
-:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1, translation_func/4, key/1.
-:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)).
+:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1, translation_func/4, key/1, objects/2.
+:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)), retractall(holding(_)), retractall(is_ship_complete), retractall(marble_labels(_)), retractall(has_unlocked_crate), retractall(comb_lock_user_state(_)), retractall(translation_func(_,_,_,_)), retractall(key(_)), retractall(objects(_,_)).
 
 /* */
 /* === Starting zone === */
@@ -11,7 +11,20 @@ i_am_at(beach).
 /* === Paths to other zones === */
 
 path(beach, n, forest).
-path(beach, s, ocean) :- is_ship_complete, write('TODO: ending'), nl, finish.
+path(beach, s, ocean) :- is_ship_complete,
+        write('You drag the repaired ship into the water and set sail.'), nl,
+        write('Yes! You think to yourself. You\'re finally going home.'), nl,
+        write('...'), nl,
+        write('A few hours pass by and all the energy and excitement you had before'), nl,
+        write('vanished. You are out here, far away from your island. The sun is setting'), nl,
+        write('waves are constantly hitting your boat and you also feel a bit dizzy because of this.'), nl,
+        write('As a last ditch effort you use the pager you found on the beach and cry for help.'), nl,
+        write('Again and again you press the little buttons but nothing happens. Not even a single sound.'), nl,
+        write('Dehydrated, hungry and nauseous you pass out...'), nl,
+        write('You open your eyes. Four men are standing next to you. You look around.'), nl,
+        write('You are in the hospital. Was this all just a dream, was is saved from my boat?'), nl,
+        write('What is happening!!'), nl,
+        finish.
 path(beach, s, ocean) :-
         write('Are you out of your mind? '), nl,
         write('Trying to cross the ocean without a ship seems like a'), nl,
@@ -85,7 +98,7 @@ take(_) :-
         false.
 
 /* Helpers for shipwreck Interaction */
-repair_items([wood, saw, hammer, nails, cloth, pager]).
+repair_items([wood, axe, hammer, nails, cloth, pager]).
 
 has_items([Head|Tail]) :-
         not(holding(Head)), write('You are missing: '), write(Head), nl, has_items(Tail), fail, !.
@@ -100,14 +113,17 @@ delete_items([]).
 delete_wreck_items :-
         repair_items(Items), delete_items(Items).
 
+remove_element(Element, [Element], []).
+remove_element(Element, [Element|Tail], Tail).
+remove_element(Element, [Head|Tail], [Head|NewTail]) :- remove_element(Element, Tail, NewTail).
+
 can_repair_wreck() :-
-        repair_items(Items), (
+        repair_items(Items),(
         not(has_items(Items)),
         write('To successfully repair the wreck, gather those materials first!'),
         nl, !, fail
         ;
-        write('Congratulations you gatherered all needed resources!'),
-        nl, !).
+        has_items(Items)).
 
 /* Interact with objects */
 interact(shipwreck) :-
@@ -118,13 +134,24 @@ interact(shipwreck) :-
         i_am_at(beach),
         not(is_ship_complete),
         can_repair_wreck,
+        write('Congratulations you gatherered all needed resources!'), nl,
         write('You successfully fixed the SHIPWRECK. You can now use the SHIP.'),
         assert(is_ship_complete),
-        delete_wreck_items,!.
+        delete_wreck_items,
+        objects(Objects, beach),
+        retract(objects(Objects, beach)),
+        remove_element(shipwreck, Objects, ReducedObjects),
+        prepend(ship, ReducedObjects, NewObjects),
+        assert(objects(NewObjects, beach)), !.
 interact(shipwreck) :-
         i_am_at(beach),
         is_ship_complete,
-        write('You already completed the ship. Venture out to escape'),!.
+        write('You already completed the ship. Venture out to escape!'),!.
+
+interact(ship) :-
+        i_am_at(beach),
+        is_ship_complete,
+        write('You already completed the ship. Venture out to escape!'),!.
 
 interact(tree) :-
         i_am_at(forest),
@@ -443,6 +470,16 @@ enter :- go(enter).
 back :- go(back).
 
 /* Move in a given direction */
+go(Direction) :-
+        i_am_at(Here),
+        path(Here, Direction, beach),
+        cave_gate_part_two,
+        not(holding(cloth)),
+        not(at(cloth, beach)),
+        write('You return to the beach and you notice immediately that something is different...'), nl,
+        write('At the shore where you originally woke up at, a large pice of cloth was washed up.'), nl,
+        write('How much luck do you have.'), nl,
+        assert(at(cloth, beach)), fail.
 
 go(Direction) :-
         i_am_at(Here),
@@ -483,6 +520,7 @@ notice_items_at(Place) :-
 notice_items_at(_).
 
 get_phrase(nails, Phrase) :- Phrase = 'are some ', !.
+get_phrase(cloth, Phrase) :- Phrase = 'is some ', !.
 get_phrase(_, 'is a ').
 
 /* Notice objects in your vicinity */
@@ -545,12 +583,12 @@ instructions :-
         write('story.             -- to listen to game\'s backstory.'), nl,
         write('n.  s.  e.  w.     -- to go in that direction.'), nl,
         write('take(Item).        -- to pick up an item.'), nl,
-        write('interact(Object).  -- to interact with an object'), nl,
+        write('interact(Object).  -- to interact with an object.'), nl,
         write('enter.             -- to step into a site.'), nl,
         write('back.              -- opposite of enter.'), nl,
         write('look.              -- to look around you again.'), nl,
         write('instructions.      -- to see this message again.'), nl,
-        write('items.             -- to see all items you are carrying'), nl,
+        write('items.             -- to see all items you are carrying.'), nl,
         write('halt.              -- to end the game and quit.'), nl,
         nl.
 
@@ -567,7 +605,7 @@ start :-
 story :-
         nl,
         write('It felt like just seconds ago, when you were on a cruise'), nl,
-        write('with your colleges enjoing the nice weather. Now you\'re left'), nl,
+        write('with your colleges enjoying the nice weather. Now you\'re left'), nl,
         write('with nothing except your dirty, wet and ripped clothes.'), nl,
         write('You have no idea where you came from nor where exactly you are now.'), nl,
         write('Around you is just water, lots of water. You seem to have stranded'), nl,
@@ -580,8 +618,8 @@ story :-
 
 describe(beach) :- write('You are at the beach. The only significant thing'), nl,
                 write('seems to be a large forest to your north. Everything else'), nl,
-                write('is just sand to your east, the ocean to your south and more sand'), nl,
-                write('to your east'), nl,
+                write('is just sand (to your east), the ocean (to your south) and more sand.'), nl,
+                write('(to your west)'), nl,
                 nl.
 
 describe(forest) :- 
@@ -589,7 +627,7 @@ describe(forest) :-
         write('Because of the trees you can\'t see more.'), nl.
 
 describe(waterfall) :-
-        write('A waterfall you can drink the fresh water directly from it.'), nl,
+        write('A waterfall. You can drink the fresh water directly from it.'), nl,
         write('Maybe you should explore some more before you continue your journey.'), nl.
 describe(waterfall_room) :-
         write('You are behind the waterfall. It\'s really dark in here, but you can still see something.'), nl.
@@ -597,7 +635,7 @@ describe(waterfall_room) :-
 describe(cave) :-
         write('A mysterious dark cave. If you want to enter it grab some light source.'), nl.
 describe(cave_entrance) :-
-        write('There is a huge stone gate infront of you. On the right site you'), nl,
+        write('There is a huge stone gate infront of you. On the right side you'), nl,
         write('notice a few small marbles integrated in the wall with numbers on them.'), nl, !.
 describe(inner_cave_gate) :-
         not(cave_gate_part_two),
@@ -618,12 +656,12 @@ describe(inner_cave_gate) :-
 describe(inner_cave_gate) :-
         write('This is the second gate of the cave.'), nl, !.
 describe(chamber) :-
-        write('This is the secrete treasure vault from the ancient civilization where they stored their tools.'), nl, !.
+        write('This is the secret treasure vault from the ancient civilization where they stored their tools.'), nl, !.
 
 /* Descriptions of objects */
 describe(shipwreck) :-
         write('A shipwreck.'), nl, write('If you had some wood, some nails, a hammer,'), nl,
-        write('a saw and some cloth you could probably repair it.'), nl.
+        write('an axe and some cloth you could probably repair it.'), nl.
 
 describe(lonely_stone) :-
         write('A lonely stone.'), nl,
@@ -634,9 +672,6 @@ describe(lonely_stone) :-
 describe(tree) :-
         write('A tree.'), nl,
         write('Here are only trees, all you can see are trees.'), nl.
-
-describe(axe) :-
-        write('An axe can be used to cut trees.'), nl.
 
 describe(marbles) :-
         not(cave_gate_part_one),
@@ -664,6 +699,11 @@ describe(crate) :-
         write('You can barely see anything in here but it looks like it '),
         nl,
         write('has a combination lock guarding whatever is inside.'), !.
+
+describe(ship) :-
+        write('A ship'), nl,
+        write('With your highly advanced tinkering skills you successfully repaired this ship.'), nl,
+        write('Be proud of yourself.'), nl, !.
 
 /* Reasons why the path in a specific direction is denied */
 
