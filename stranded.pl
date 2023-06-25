@@ -255,19 +255,27 @@ cave_gate_part_one :- marble_labels([Head|Tail]), is_in_asc_order(Head, Tail).
 key().
 pass_key(Key) :- assert(key(Key)).
 
-input(['ፚ', 'ᶋ឵', 'ⵇ', ' ', 'Ψ', 'ⵇ', 'Հ', ' ', 'Æ', 'ꝟ', ' ', 'ፚ', 'ᶋ឵', 'ⵇ', ' ', '∆', 'ⵇ', 'ꝟ', 'ፚ', ' ', 'ꝟ', 'ш', '∆', '∰ަ', 'ⵇ', '⅁', 'ፚ']).
+input(['℻', '๑', '⌘', '♗', 'ፚ', '⌘', ' ', '♗', '℻', '▙', '♗', '℻', '๑', '⌘', '♗', '∆', '⌘', 'Ξ', '∰', '⌘', '℻', '♗', 'Ξ', '๑', 'Æ', 'Հ', '⊙', '⌘', '∰', '♗', '⍼', '∆', '♗', '▙', 'ᘜ', '⌘', '♗', ' ', '▙', 'ᗅ', '♗', 'Æ', '⏻', '∰', '⌘', 'Æ', 'ꝟ', ' ', '♗', 'ፚ', 'ᘜ', '▙', '⌬', '⅁', '♗', '℻', '๑', '⍼', 'ᘜ', 'ፚ', '♗', 'Æ', '⊙', '▙', 'ᗅ', '℻', '♗', '℻', '๑', '⌘', '♗', '⊙', '⌘', '∆', '℻', '♗', '∆', 'ᗅ', '⊙', 'Ø', '⌘', 'Ξ', '℻', '♗', 'Æ', '℻', '♗', '∆', 'Ξ', '๑', '▙', '▙', '⏻', '♗', 'Æ', 'ᘜ', 'ꝟ', '♗', 'Հ', 'Æ', ' ', '⊙', '⌘', '♗', 'Ø', 'ᗅ', '∆', '℻', '♗', 'Հ', 'Æ', ' ', '⊙', '⌘', '♗', ' ', '▙', 'ᗅ', '♗', 'Æ', '∰', '⌘', '♗', 'Æ', '⏻', '∰', '⌘', 'Æ', 'ꝟ', ' ', '♗', '℻', '⌘', 'Æ', 'Ξ', '๑', '⍼', 'ᘜ', 'ᶋ', '♗', '⍼', '℻', '⅁']).
 
-get_ancient_alphabet(Alphabet) :- 
-        Alphabet    = ['⍼', '∆', '⅁', 'ᙝ', 'ⵇ', '▙', '☭', 'ᶋ឵', 'Æ', '∰ަ', 'Ψ', 'ᗅ', '⏻','⌬', 'Ø', '⌘', '♗', '๑', 'ꝟ', 'ፚ', 'ш', 'Ξ', 'ᘜ', '⊙', 'Հ', '℻', ' '].
-get_translation(Translation) :-
-        Translation = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' '].
+get_ancient_alphabet(['⍼', '∆', '⅁', 'ᙝ', 'ⵇ', '▙', '☭', 'ᶋ', 'Æ', '∰', 'Ψ', 'ᗅ', '⏻','⌬', 'Ø', '⌘', '♗', '๑', 'ꝟ', 'ፚ', 'ш', 'Ξ', 'ᘜ', '⊙', 'Հ', '℻', ' ', '⚝']).
+
+get_translation(['I', 'S', '.', 'Q', 'Z', 'O', 'F', 'G', 'A', 'R', 'V', 'U', 'L', 'W', 'J', 'E', ' ', 'H', 'D', 'K', 'P', 'C', 'N', 'B', 'M', 'T', 'Y', 'X']).
+
+% Reference implementation (not optimal)
+/*
+find_translation(AncientCharacter, [AncientHead|AncientTail], [LatinHead|LatinTail], Translation) :-
+    AncientHead == AncientCharacter,
+    Translation = LatinHead
+    ;
+    find_translation(AncientCharacter, AncientTail, LatinTail, Translation).
+
+translate(_, _, [], []).
+translate(Ancient, Latin, [Head|Tail], [NewHead|NewTail]) :-
+        find_translation(Head, Ancient, Latin, NewHead),
+        translate(Ancient, Latin, Tail, NewTail), !.
+*/
 
 cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
-      
-/*
-translation(AncientAlphabet, Translation, [], Output).
-translation(AncientAlphabet, Translation, [Cur|Input], Output) :-
-*/
 
 is_correct_key([]) :- false, !.
 is_correct_key([Head | Tail]) :- are_arrays_equal(Head, ['L','O','A','L']) ; is_correct_key(Tail).
