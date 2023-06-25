@@ -1,7 +1,7 @@
 /* Stranded, by Aichinger Tobias, Ilming Winnie, Schludermann Julian. */
 
-:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1, translation_func/4, key/1, objects/2.
-:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)), retractall(holding(_)), retractall(is_ship_complete), retractall(marble_labels(_)), retractall(has_unlocked_crate), retractall(comb_lock_user_state(_)), retractall(translation_func(_,_,_,_)), retractall(key(_)), retractall(objects(_,_)).
+:- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1, translation_func/4, key/1, objects/2, tree_stump_state/1, has_solved_stump_puzzle/0.
+:- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)), retractall(holding(_)), retractall(is_ship_complete), retractall(marble_labels(_)), retractall(has_unlocked_crate), retractall(comb_lock_user_state(_)), retractall(translation_func(_,_,_,_)), retractall(key(_)), retractall(objects(_,_)), retractall(tree_stump_state(_)), retractall(has_solved_stump_puzzle).
 
 /* === Starting zone === */
 
@@ -72,6 +72,7 @@ at(hammer, chamber).
 
 objects([shipwreck, lonely_stone], beach).
 objects([tree], forest).
+objects([tree_stump], waterfall).
 objects([marbles], cave_entrance).
 objects([axe], inner_cave_gate).
 objects([crate], waterfall_room).
@@ -202,6 +203,27 @@ interact(crate) :-
         write('?????????'), nl,
         write('What exactly are you trying to do?'), nl, !.
       
+interact(stump) :-
+        not(i_am_at(waterfall)),
+        write('...'), nl, !.
+
+interact(stump) :-
+        write('You approach the tree stump to take a closer look.'), nl,
+        write('What you see inside blows your mind.'), nl,
+        write('Small creatures looking like beetles.'), nl,
+        write('Some of them are glowing, some are not.'), nl,
+        write('They are also aligned horizontally and form multiple rows.'), nl,
+        write('Out of curiosity you touch one of them'), nl,
+        write('and to your suprise it starts glowing.'), nl,
+        write('Ok weird...'), nl,
+        write('Looking at the side you also notice a large X carved into the tree stump.'), nl,
+        write('You get distracted a bit and start toching the beetles one by one.'), nl,
+        write('Funnily enough you notice that only the beetles in the bottom most row'), nl,
+        write('react to your touches.'), nl,
+        write('There has to be more to this! You think to yourself...'), nl,
+        describe_stump_puzzle, !.
+
+
 interact(_) :-
         write('I don\'t see that here.'), nl,
         i_am_at(Place),
@@ -466,6 +488,92 @@ describe_crate_puzzle :-
         write('Current lock state: '), nl,
         print_lock, !.
 
+/* === Tree stump puzzle === */
+tree_stump_row('o~-~o-~-o~-~o-~-o~-~o-~-o~-~o-~-o\n|   |   |   |   |   |   |   |   |\no-~-o~-~o-~-o~-~o-~-o~-~o-~-o~-~o').
+tree_stump_row_chars(X) :- tree_stump_row(Chars), atom_chars(Chars, X).
+% Hardcode go brrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+tree_stump_first_symbol_index(36).
+tree_stump_symbol_increase(4).
+tree_stump_symbols(8).
+
+tree_stump_beetles(['o', '#']).
+
+tree_stump_state([0,0,0,0,0,0,0,0]).
+tree_stump_first_row([0,1,0,0,1,1,0,1]).
+tree_stump_second_row([1,0,1,0,1,0,0,1]).
+
+tree_stump_solution([], [], []).
+tree_stump_solution([FirstHead|FirstTail], [SecondHead|SecondTail], [Head|Tail]) :-
+        Head is FirstHead xor SecondHead,
+        tree_stump_solution(FirstTail, SecondTail, Tail).
+
+print_stump_row(Chars, [], _) :- print_array(Chars, '').
+print_stump_row(Chars, [StateHead|StateTail], Count) :-
+        tree_stump_beetles(Beetles),
+        tree_stump_symbol_increase(Inc),
+        tree_stump_first_symbol_index(Base),
+        get_nth(StateHead, Beetles, Beetle),
+        Idx is Count * Inc + Base,
+        replace_nth(Beetle, Idx, Chars, NewChars),
+        NewCount is Count + 1,
+        print_stump_row(NewChars, StateTail, NewCount), !.
+
+print_stump :-
+        i_am_at(waterfall),
+        not(has_solved_stump_puzzle),
+        tree_stump_row_chars(Chars),
+        tree_stump_first_row(FirstRow),
+        tree_stump_second_row(SecondRow),
+        tree_stump_state(UserRow),
+        print_stump_row(Chars, FirstRow, 0), nl,
+        print_stump_row(Chars, SecondRow, 0), nl,
+        write('================================='), nl,
+        print_stump_row(Chars, UserRow, 0), nl, !.
+
+touch(Pos) :-
+        i_am_at(waterfall),
+        not(has_solved_stump_puzzle),
+        tree_stump_symbols(Count),
+        Pos > 0,
+        Pos =< Count,
+        Idx is Pos - 1,
+        tree_stump_state(OldStates),
+        retract(tree_stump_state(OldStates)),
+        get_nth(Idx, OldStates, State),
+        NewState is (State + 1) mod 2,
+        replace_nth(NewState, Idx, OldStates, NewStates),
+        assert(tree_stump_state(NewStates)),
+        (
+        tree_stump_first_row(FR),
+        tree_stump_second_row(SR),
+        tree_stump_solution(FR, SR, X),
+        are_arrays_equal(X, NewStates),
+        assert(has_solved_stump_puzzle),
+        stump_puzzle_solve_text
+        ;
+        true
+        ), !.
+
+describe_stump_puzzle :-
+        i_am_at(waterfall),
+        not(has_solved_stump_puzzle),
+        write('Now to the puzzle'), nl,
+        write('Bring the beetles in the last row in the correct state!'), nl,
+        write('#: indicates that the beetle is glowing'), nl,
+        write('o: indicates that the beetle is not glowing'), nl,
+        write('The following commands are available during this puzzle'), nl,
+        write('touch(Pos).                 -- Toch the beetle at Pos (Pos = 1 == first beetle)'), nl,
+        write('print_stump.                -- prints a visual representation of the stump'), nl,
+        write('If you are stuck interact with the tree stump again and make sure to read the text carfully.'), nl,
+        write('Good Luck!'), nl, !.
+
+
+stump_puzzle_solve_text :-
+        write('Respect. You solved the puzzle. You hear a little click and a small hidden door'), nl,
+        write('unlocks. You look inside and pull out a tiny hat and put it into your iventory.'), nl,
+        write('It\'s not much but it\'s honest work.'), nl,
+        assert(holding(hat)), !.
+
 /* === These rules define the direction letters as calls to go/1. === */
 
 n :- go(n).
@@ -661,7 +769,13 @@ describe(inner_cave_gate) :-
         write('get_ancient_alphabet(Alphabet)     --puts the ancient alphabet in Alphabet'), nl,
         write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, nl,
         write('After you successfully translated the message pass the key:'), nl,
-        write('pass_key(Key).                     --is used to pass a key to the gate(Key is a string)'), nl, !.
+        write('pass_key(Key).                     --is used to pass a key to the gate(Key is a string)'), nl,
+        write('The message you read is: '), nl,
+        input(X),
+        print_array(X, ''), nl,
+        write('Don\'t worry, you don\'t have to copy this. The string will also be given to your '), nl,
+        write('function when checking it with test_translation.'), nl, !.
+
 describe(inner_cave_gate) :-
         write('This is the second gate of the cave.'), nl, !.
 describe(chamber) :-
@@ -714,6 +828,10 @@ describe(ship) :-
         write('A ship'), nl,
         write('With your highly advanced tinkering skills you successfully repaired this ship.'), nl,
         write('Be proud of yourself.'), nl, !.
+
+describe(tree_stump) :-
+        write('A tree stump (stump)'), nl,
+        write('It looks weird. Maybe you should take a closer look.'), nl.
 
 /* === Reasons why the path in a specific direction is denied === */
 
