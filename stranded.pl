@@ -85,7 +85,7 @@ take(_) :-
         false.
 
 /* Helpers for shipwreck Interaction */
-repair_items([wood, saw, hammer, nails, cloth]).
+repair_items([wood, saw, hammer, nails, cloth, pager]).
 
 has_items([Head|Tail]) :-
         not(holding(Head)), write('You are missing: '), write(Head), nl, has_items(Tail), fail, !.
@@ -159,9 +159,12 @@ interact(crate) :-
         write('So you will have to do it the boring way and crack the combination'), nl,
         write('of the lock. After 25 Minutes of brute force and out of ideas you'), nl,
         write('think to yourself: I got HERE FROM the BEACH in such LITTLE TIME.'), nl,
-        write('It was just a race AGAINST the CLOCK. You would like to COUNT sheep now'), nl,
-        write('and sleep a bit, but there is a huge rock BLOCKing your view of the sky'), nl,
+        write('It was just a race AGAINST the CLOCK.'), nl,
         write('If I STARTed in the NORTH I would have gotten here first.'), nl,
+        write('But now you are tired and TAKEing a quick nap would be nice.'), nl,
+        write('But the ground is too hard and uncomfortable for you to sleep now.'), nl,
+        write('Since this crate is LOCKED anyways you should probably explore some'), nl,
+        write('of the other DIRECTIONS.'), nl,
         describe_crate_puzzle, nl, !.
 interact(crate) :-
         i_am_at(waterfall_room),
@@ -211,7 +214,8 @@ roll :-
         retract(marble_labels(Labels)),
         remove_last(Labels, ReducedLabels, Elem),
         prepend(Elem, ReducedLabels, NewLabels),
-        assert(marble_labels(NewLabels)), !.
+        assert(marble_labels(NewLabels)),
+        (cave_gate_part_one, write('Good job! You solved the puzzle! You can now advance further into the cave'), nl ; true), !.
 
 swap :- not(i_am_at(cave_entrance)), i_am_at(Loc), wrong_place(Loc, 'swap'), !.
 swap :-
@@ -221,7 +225,8 @@ swap :-
         marble_labels(Labels),
         retract(marble_labels(Labels)),
         swap_first_and_second(Labels, NewLabels),
-        assert(marble_labels(NewLabels)), !.
+        assert(marble_labels(NewLabels)),
+        (cave_gate_part_one, write('Good job! You solved the puzzle! You can now advance further into the cave'), nl ; true), !.
 
 swap_first_and_second([First, Second | Tail], [Second, First | Tail]).
 
@@ -265,13 +270,17 @@ translate(Ancient, Latin, [Head|Tail], [NewHead|NewTail]) :-
 cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
 
 is_correct_key([]) :- false, !.
-is_correct_key(Key) :- are_arrays_equal(Key, ['L','O','A','L']), !.
+is_correct_key(Key) :- Key == 'LOAL', !.
 
 % This function loads a given function with 4 Parameters into our dynamic "translation_func"
 % It's complicated and simple at the same time, so I will make some comments to explain what happens here
+set_translation_func(_) :-
+        not(i_am_at(inner_cave_gate)),
+        write('You can\'t use that here'), !.
+
 set_translation_func(Name) :-
     % Since we don't want multiple translation functions we delete everything in our dynamic first
-    retractall(translation_func(_)),
+    retractall(translation_func(_,_,_,_)),
     % Here we get the Functor (https://www.swi-prolog.org/pldoc/man?predicate=functor/3) by name and arity in this case 4
     functor(Help, Name, 4),
     % Here we use clause (https://www.swi-prolog.org/pldoc/doc_for?object=clause/2) to get the clause body to the functor we just aquired
@@ -289,8 +298,25 @@ set_translation_func(Name) :-
 % Now that the function is loaded we want to check if the function translates correctly
 % To do that we just call the function with some data and expect some output in the last variable
 test_translation :-
-    % Check if database has function
-    translation_func(_),
+        not(i_am_at(inner_cave_gate)),
+        write('You can\'t use that here'), !.
+
+test_translation :-
+        get_ancient_alphabet(Alphabet),
+        get_translation(Translation),
+        input(Input),
+        not(translation_func(Alphabet, Translation, Input, _)),
+        write('The given translation function could not be executed or returned false!'), nl, !.
+
+test_translation :-
+        get_ancient_alphabet(Alphabet),
+        get_translation(Translation),
+        input(Input),
+        translation_func(Alphabet, Translation, Input, Output),
+        var(Output),
+        write('The given translation function does not output anything on the last argument!'), nl, !.
+
+test_translation :-
     % call function
     get_ancient_alphabet(Alphabet),
     get_translation(Translation),
@@ -298,8 +324,8 @@ test_translation :-
     translation_func(Alphabet, Translation, Input, Output),
     % Make sure Output is actually set to some value and not just a variable
     not(var(Output)),
-    % For testing purposes print the value of output
-    write(Output), nl.
+    write('Your translation function\'s output:'), nl,
+    print_array(Output, ''), nl, !.
 
 /* Waterfall room: crate puzzle */
 combination_lock('|---|---|---|---|---|---|\n|   |   |   |   |   |   |\n|---|---|---|---|---|---|\n').
@@ -384,7 +410,7 @@ pull_on_lock :-
         write('You better pick it up fast so the owner doesn\'t catch you red handed'), nl,
         assert(has_unlocked_crate),
         assert(at(torch, waterfall_room)),
-        assert(at(nails, waterfall_room))
+        assert(at(nails, waterfall_room)), !
         ;
         write('Nothing.'), nl,
         write('Damn it!'), nl,
@@ -452,10 +478,13 @@ look :-
 
 notice_items_at(Place) :-
         at(X, Place),
-        write('There is a '), write(X), write(' here.'), nl,
+        write('There '), get_phrase(X, Phrase), write(Phrase), write(X), write(' here.'), nl,
         fail.
 
 notice_items_at(_).
+
+get_phrase(nails, Phrase) :- Phrase = 'are some ', !.
+get_phrase(_, 'is a ').
 
 /* Notice objects in your vicinity */
 
@@ -585,7 +614,7 @@ describe(inner_cave_gate) :-
         write('get_ancient_alphabet(Alphabet)     --puts the ancient alphabet in Alphabet'), nl,
         write('get_translation(Translation)       --puts the translation for the alphabet in Translation'), nl, nl,
         write('After you successfully translated the message pass the key:'), nl,
-        write('pass_key(Key).                     --is used to pass a key to the gate'), nl, !.
+        write('pass_key(Key).                     --is used to pass a key to the gate(Key is a string)'), nl, !.
 describe(chamber) :-
         write('This is the secrete treasure vault from the ancient civilization where they stored their tools.'), nl, !.
 
