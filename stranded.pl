@@ -3,7 +3,6 @@
 :- dynamic i_am_at/1, at/2, holding/1, is_ship_complete/0, marble_labels/1, has_unlocked_crate/0, comb_lock_user_state/1, translation_func/4, key/1, objects/2.
 :- retractall(at(_, _)), retractall(i_am_at(_)), retractall(alive(_)), retractall(holding(_)), retractall(is_ship_complete), retractall(marble_labels(_)), retractall(has_unlocked_crate), retractall(comb_lock_user_state(_)), retractall(translation_func(_,_,_,_)), retractall(key(_)), retractall(objects(_,_)).
 
-/* */
 /* === Starting zone === */
 
 i_am_at(beach).
@@ -63,13 +62,13 @@ path(chamber, back, inner_cave_gate).
 
 path(waterfall, e, cave).
 
-/* Locations of items */
+/* === Locations of items === */
 
 at(pager, beach).
 at(axe, inner_cave_gate).
 at(hammer, chamber).
 
-/* Locations of objects */
+/* === Locations of objects === */
 
 objects([shipwreck, lonely_stone], beach).
 objects([tree], forest).
@@ -77,7 +76,7 @@ objects([marbles], cave_entrance).
 objects([axe], inner_cave_gate).
 objects([crate], waterfall_room).
 
-/* Pick up items. */
+/* === Pick up items === */
 
 take(X) :-
         holding(X),
@@ -97,7 +96,7 @@ take(_) :-
         nl,
         false.
 
-/* Helpers for shipwreck Interaction */
+/* === Helpers for shipwreck Interaction === */
 repair_items([wood, axe, hammer, nails, cloth, pager]).
 
 has_items([Head|Tail]) :-
@@ -125,7 +124,7 @@ can_repair_wreck() :-
         ;
         has_items(Items)).
 
-/* Interact with objects */
+/* === Interact with objects === */
 interact(shipwreck) :-
         i_am_at(beach),
         not(is_ship_complete),
@@ -269,10 +268,19 @@ is_in_asc_order(Start, [Head|Tail]) :-
 
 cave_gate_part_one :- marble_labels([Head|Tail]), is_in_asc_order(Head, Tail).
 
-/* Cave puzzle 2: Write your own prolog function */
+/* === Cave puzzle 2: Write your own prolog function === */
 
 key().
-pass_key(Key) :- assert(key(Key)).
+pass_key(_) :-
+        not(i_am_at(inner_cave_gate)),
+        write('Where do you intend to pass your key to? You are currently at the '),
+        i_am_at(Loc), write(Loc), write('.'), nl, !.
+pass_key(Key) :- 
+        Key \== 'LOAL',
+        write(Key), write(' is not the correct key, did you really translate the message?'), nl, !.
+pass_key(Key) :- 
+        assert(key(Key)), 
+        write('This is the correct key! You can now go deeper into the cave.'), nl, !.
 
 input(['℻', '๑', '⌘', '♗', 'ፚ', '⌘', ' ', '♗', '℻', '▙', '♗', '℻', '๑', '⌘', '♗', '∆', '⌘', 'Ξ', '∰', '⌘', '℻', '♗', 'Ξ', '๑', 'Æ', 'Հ', '⊙', '⌘', '∰', '♗', '⍼', '∆', '♗', '▙', 'ᘜ', '⌘', '♗', ' ', '▙', 'ᗅ', '♗', 'Æ', '⏻', '∰', '⌘', 'Æ', 'ꝟ', ' ', '♗', 'ፚ', 'ᘜ', '▙', '⌬', '⅁', '♗', '℻', '๑', '⍼', 'ᘜ', 'ፚ', '♗', 'Æ', '⊙', '▙', 'ᗅ', '℻', '♗', '℻', '๑', '⌘', '♗', '⊙', '⌘', '∆', '℻', '♗', '∆', 'ᗅ', '⊙', 'Ø', '⌘', 'Ξ', '℻', '♗', 'Æ', '℻', '♗', '∆', 'Ξ', '๑', '▙', '▙', '⏻', '♗', 'Æ', 'ᘜ', 'ꝟ', '♗', 'Հ', 'Æ', ' ', '⊙', '⌘', '♗', 'Ø', 'ᗅ', '∆', '℻', '♗', 'Հ', 'Æ', ' ', '⊙', '⌘', '♗', ' ', '▙', 'ᗅ', '♗', 'Æ', '∰', '⌘', '♗', 'Æ', '⏻', '∰', '⌘', 'Æ', 'ꝟ', ' ', '♗', '℻', '⌘', 'Æ', 'Ξ', '๑', '⍼', 'ᘜ', 'ᶋ', '♗', '⍼', '℻', '⅁']).
 
@@ -280,7 +288,10 @@ get_ancient_alphabet(['⍼', '∆', '⅁', 'ᙝ', 'ⵇ', '▙', '☭', 'ᶋ', '�
 
 get_translation(['I', 'S', '.', 'Q', 'Z', 'O', 'F', 'G', 'A', 'R', 'V', 'U', 'L', 'W', 'J', 'E', ' ', 'H', 'D', 'K', 'P', 'C', 'N', 'B', 'M', 'T', 'Y', 'X']).
 
-% Reference implementation (not optimal)
+cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
+is_correct_key(Key) :- Key == 'LOAL', !.
+
+% === Reference implementation (not optimal) ===
 /*
 find_translation(AncientCharacter, [AncientHead|AncientTail], [LatinHead|LatinTail], Translation) :-
     AncientHead == AncientCharacter,
@@ -294,9 +305,7 @@ translate(Ancient, Latin, [Head|Tail], [NewHead|NewTail]) :-
         translate(Ancient, Latin, Tail, NewTail), !.
 */
 
-cave_gate_part_two :- key(Keys), is_correct_key(Keys), !.
-
-is_correct_key(Key) :- Key == 'LOAL', !.
+/* === Validating user rule === */
 
 % This function loads a given function with 4 Parameters into our dynamic "translation_func"
 % It's complicated and simple at the same time, so I will make some comments to explain what happens here
@@ -353,7 +362,8 @@ test_translation :-
     write('Your translation function\'s output:'), nl,
     print_array(Output, ''), nl, !.
 
-/* Waterfall room: crate puzzle */
+/* === Waterfall room: crate puzzle === */
+
 combination_lock('|---|---|---|---|---|---|\n|   |   |   |   |   |   |\n|---|---|---|---|---|---|\n').
 combination_lock_chars(X) :- combination_lock(Chars), atom_chars(Chars, X).
 combination_lock_values(['N', 'E', 'S', 'W']).
@@ -456,7 +466,7 @@ describe_crate_puzzle :-
         write('Current lock state: '), nl,
         print_lock, !.
 
-/* These rules define the direction letters as calls to go/1. */
+/* === These rules define the direction letters as calls to go/1. === */
 
 n :- go(n).
 
@@ -469,7 +479,7 @@ w :- go(w).
 enter :- go(enter).
 back :- go(back).
 
-/* Move in a given direction */
+/* === Move in a given direction === */
 go(Direction) :-
         i_am_at(Here),
         path(Here, Direction, beach),
@@ -493,13 +503,13 @@ go(Direction) :-
 go(_) :-
         write('You can\'t go that way!'), nl.
 
-/* Step into site */
+/* === Step into site === */
 
 enter(X) :-
         not(i_am_at(X)),
         write('You are currently not able to enter anything'), nl, !.
 
-/* Look around you */
+/* === Look around you === */
 
 look :-
         i_am_at(Place),
@@ -509,8 +519,7 @@ look :-
         nl,
         (not(notice_objects_at(Place)), !); true.
 
-/* These rules set up a loop to mention all the objects
-   in your vicinity. */
+/* === These rules set up a loop to mention all the objects in your vicinity. === */
 
 notice_items_at(Place) :-
         at(X, Place),
@@ -523,7 +532,7 @@ get_phrase(nails, Phrase) :- Phrase = 'are some ', !.
 get_phrase(cloth, Phrase) :- Phrase = 'is some ', !.
 get_phrase(_, 'is a ').
 
-/* Notice objects in your vicinity */
+/* === Notice objects in your vicinity === */
 
 notice_objects_at(Place) :-
         write('Looking around you also see the following:'), nl,
@@ -540,7 +549,7 @@ describe_objects([Head|Tail]) :-
 
 describe_objects([]).
 
-/* Print items currently held */
+/* === Print items currently held === */
 items :-
         write('You are currently holding: '),
         nl,
@@ -556,11 +565,11 @@ print_items :-
         write(X),
         nl,
         fail.
-/* This rule tells how to die. */
+
+/* === This rule tells how to die. === */
 
 die :-
         finish.
-
 
 /* Under UNIX, the "halt." command quits Prolog but does not
    remove the output window. On a PC, however, the window
@@ -572,8 +581,7 @@ finish :-
         write('The game is over. Please enter the "halt." command.'),
         nl.
 
-
-/* Print game instructions */
+/* === Print game instructions === */
 
 instructions :-
         nl,
@@ -592,8 +600,7 @@ instructions :-
         write('halt.              -- to end the game and quit.'), nl,
         nl.
 
-
-/* This rule prints out instructions and tells where you are. */
+/* === This rule prints out instructions and tells where you are. === */
 
 start :-
         story,
@@ -601,7 +608,7 @@ start :-
         look.
 
 
-/* This rule prints out the backstory of the game */
+/* === This rule prints out the backstory of the game === */
 story :-
         nl,
         write('It felt like just seconds ago, when you were on a cruise'), nl,
@@ -613,8 +620,7 @@ story :-
         write('But one thing is for sure. You can\'t stay here forever...'), nl,
         nl.
 
-
-/* Descriptions of rooms */
+/* === Descriptions of rooms === */
 
 describe(beach) :- write('You are at the beach. The only significant thing'), nl,
                 write('seems to be a large forest to your north. Everything else'), nl,
@@ -658,7 +664,8 @@ describe(inner_cave_gate) :-
 describe(chamber) :-
         write('This is the secret treasure vault from the ancient civilization where they stored their tools.'), nl, !.
 
-/* Descriptions of objects */
+/* === Descriptions of objects  === */
+
 describe(shipwreck) :-
         write('A shipwreck.'), nl, write('If you had some wood, some nails, a hammer,'), nl,
         write('an axe and some cloth you could probably repair it.'), nl.
@@ -682,7 +689,7 @@ describe(marbles) :-
         write('For example the following numbers are matching that rule:'), nl,
         write('2, 4, 16'), nl,
         write('3, 9, 81'), nl,
-        write('1, 2, 3'), nl,
+        write('4, 16, 256'), nl,
         write('You have the following options to interact with them: '), nl,
         write('roll.                --which moves the circle once'), nl,
         write('swap.                --which swaps the first two elements'), nl,
@@ -705,7 +712,7 @@ describe(ship) :-
         write('With your highly advanced tinkering skills you successfully repaired this ship.'), nl,
         write('Be proud of yourself.'), nl, !.
 
-/* Reasons why the path in a specific direction is denied */
+/* === Reasons why the path in a specific direction is denied === */
 
 deny(beach, e) :- write('You probably shouldn\'t explore the beach right now.'), nl.
 deny(beach, w) :- deny(beach, e).
